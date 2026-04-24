@@ -1,0 +1,353 @@
+:root {
+    --hms-bg: #eef3ff;
+    --hms-bg-soft: #f8fbff;
+    --hms-primary: #2f66f2;
+    --hms-primary-dark: #1f46b8;
+    --hms-accent: #15b88a;
+    --hms-gold: #f4b740;
+    --hms-text: #162743;
+    --hms-muted: #60708a;
+    --hms-border: rgba(47, 102, 242, 0.14);
+    --hms-shadow: 0 16px 40px rgba(24, 51, 109, 0.12);
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--hms-text);
+    background:
+        radial-gradient(circle at 7% 10%, rgba(47, 102, 242, 0.12), transparent 28%),
+        radial-gradient(circle at 92% 12%, rgba(21, 184, 138, 0.10), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(238, 243, 255, 0.96)),
+        var(--hms-bg);
+    min-height: 100vh;
+}
+
+.app-shell {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    background: linear-gradient(180deg, #1a3b98, #2a5ee2);
+    color: #fff;
+    padding: 1.15rem 0.95rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 8px 0 24px rgba(8, 26, 70, 0.2);
+}
+
+.app-brand {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.06rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 0.7rem;
+    margin-bottom: 0.75rem;
+}
+
+.app-brand:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.app-user-meta {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.8rem;
+    padding: 0.75rem 0.7rem;
+    margin-bottom: 0.95rem;
+}
+
+.app-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.app-menu-link {
+    color: rgba(255, 255, 255, 0.92);
+    text-decoration: none;
+    padding: 0.62rem 0.72rem;
+    border-radius: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.app-menu-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(1px);
+}
+
+.app-menu-link.active {
+    background: #fff;
+    color: #1f46b8;
+    box-shadow: 0 8px 22px rgba(6, 24, 70, 0.28);
+}
+
+.app-main {
+    min-width: 0;
+}
+
+.navbar {
+    background: linear-gradient(135deg, #1f46b8, #2f66f2) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.navbar-brand {
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 12px rgba(4, 19, 58, 0.35);
+}
+
+.nav-link {
+    border-radius: 0.7rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.container.py-4 {
+    padding-top: 1.4rem !important;
+    padding-bottom: 2rem !important;
+}
+
+.card {
+    border-radius: 1.1rem;
+    border: 1px solid var(--hms-border);
+    box-shadow: var(--hms-shadow);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.96));
+    transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 44px rgba(24, 51, 109, 0.16);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--hms-primary), var(--hms-primary-dark));
+    border: 1px solid transparent;
+    box-shadow: 0 8px 20px rgba(31, 70, 184, 0.25);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border-color: rgba(31, 70, 184, 0.35);
+    color: var(--hms-primary-dark);
+    background: rgba(47, 102, 242, 0.04);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background: linear-gradient(135deg, var(--hms-primary), var(--hms-primary-dark));
+    border-color: transparent;
+    color: #fff;
+}
+
+.btn {
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-surface {
+    position: relative;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    min-height: 420px;
+    background-image:
+        linear-gradient(135deg, rgba(16, 32, 62, 0.42), rgba(31, 111, 235, 0.30)),
+        url('assets/images/hostel-night-bg.png');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+}
+
+.hero-surface .inner {
+    position: relative;
+    z-index: 2;
+    padding: 2.6rem;
+    text-shadow: 0 4px 16px rgba(15, 24, 44, 0.34);
+}
+
+.hero-title-single-line {
+    white-space: nowrap;
+    font-size: clamp(1.55rem, 2.5vw, 2.85rem);
+}
+
+.hero-chip {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 0.82rem;
+}
+
+body.hms-page-login-bg {
+    background-image:
+        linear-gradient(135deg, rgba(16, 32, 62, 0.42), rgba(31, 111, 235, 0.30)),
+        url('assets/images/hostel-night-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+.feature-image {
+    width: 100%;
+    height: 170px;
+    border-radius: 0.9rem;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 20px rgba(20, 42, 94, 0.16);
+}
+
+.overlay-accent {
+    background: linear-gradient(145deg, rgba(21, 184, 138, 0.16), rgba(47, 102, 242, 0.10));
+    border-radius: 1rem;
+}
+
+.contact-cta {
+    background: linear-gradient(145deg, rgba(47, 102, 242, 0.10), rgba(21, 184, 138, 0.08));
+}
+
+.contact-cta-kicker {
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1f46b8;
+    font-weight: 700;
+}
+
+.contact-cta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.contact-cta-item {
+    border: 1px solid rgba(47, 102, 242, 0.20);
+    border-radius: 0.9rem;
+    padding: 0.8rem;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.contact-cta-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: #1f46b8;
+    background: rgba(47, 102, 242, 0.09);
+    border: 1px solid rgba(47, 102, 242, 0.24);
+    border-radius: 999px;
+    padding: 0.32rem 0.7rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.contact-cta-link:hover {
+    color: #fff;
+    background: #2f66f2;
+    border-color: #2f66f2;
+}
+
+.form-control,
+.form-select {
+    border-radius: 0.7rem;
+    border: 1px solid rgba(47, 102, 242, 0.2);
+    background-color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(47, 102, 242, 0.55);
+    box-shadow: 0 0 0 0.2rem rgba(47, 102, 242, 0.16);
+}
+
+.table {
+    --bs-table-bg: transparent;
+}
+
+.table thead th {
+    color: #21375d;
+    font-size: 0.86rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    border-bottom-color: rgba(47, 102, 242, 0.22);
+}
+
+.table tbody tr:hover {
+    background: rgba(47, 102, 242, 0.05);
+}
+
+.badge {
+    border-radius: 0.55rem;
+    padding: 0.42rem 0.58rem;
+    font-weight: 600;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.85rem;
+}
+
+.text-muted,
+.small.text-muted,
+.form-text {
+    color: var(--hms-muted) !important;
+}
+
+.chart-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 320px;
+    border-radius: 0.95rem;
+    background: linear-gradient(180deg, #fff, #f6f9ff);
+    padding: 0.55rem;
+    border: 1px solid rgba(47, 102, 242, 0.14);
+}
+
+.chart-wrap--sm {
+    min-height: 260px;
+}
+
+@media (max-width: 992px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .app-sidebar {
+        position: static;
+        height: auto;
+        overflow: visible;
+    }
+
+    .app-menu {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .app-menu-link {
+        font-size: 0.92rem;
+    }
+
+    .contact-cta-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
