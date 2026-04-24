@@ -9,51 +9,60 @@ if (is_file(__DIR__ . '/config.local.php')) {
     require __DIR__ . '/config.local.php';
 }
 
+function hms_env(string $name, $default = null)
+{
+    $value = getenv($name);
+    if ($value === false || $value === '') {
+        return $default;
+    }
+    return $value;
+}
+
 if (!defined('HMS_DB_HOST')) {
-    define('HMS_DB_HOST', 'localhost');
+    define('HMS_DB_HOST', hms_env('HMS_DB_HOST', 'localhost'));
 }
 if (!defined('HMS_DB_NAME')) {
-    define('HMS_DB_NAME', 'hms_db');
+    define('HMS_DB_NAME', hms_env('HMS_DB_NAME', 'hms_db'));
 }
 if (!defined('HMS_DB_USER')) {
-    define('HMS_DB_USER', 'root');
+    define('HMS_DB_USER', hms_env('HMS_DB_USER', 'root'));
 }
 if (!defined('HMS_DB_PASS')) {
-    define('HMS_DB_PASS', '');
+    define('HMS_DB_PASS', hms_env('HMS_DB_PASS', ''));
 }
 
 /** Web path to `public/` (leading slash, trailing slash). On production often `/` if the vhost root is `public/`. */
 if (!defined('HMS_BASE_URL')) {
-    define('HMS_BASE_URL', '/HMS/public/');
+    define('HMS_BASE_URL', hms_env('HMS_BASE_URL', '/HMS/public/'));
 }
 
 /** Public site origin, no trailing slash. Must match the URL users use (HTTPS). Used for Pesapal callback/IPN. */
 if (!defined('HMS_APP_URL')) {
-    define('HMS_APP_URL', 'http://localhost');
+    define('HMS_APP_URL', hms_env('HMS_APP_URL', 'http://localhost'));
 }
 
 // Pesapal API 3.0 — https://developer.pesapal.com/how-to-integrate/e-commerce/api-30-json/api-reference
 if (!defined('HMS_PESAPAL_ENV')) {
-    define('HMS_PESAPAL_ENV', 'sandbox'); // sandbox | live
+    define('HMS_PESAPAL_ENV', hms_env('HMS_PESAPAL_ENV', 'sandbox')); // sandbox | live
 }
 if (!defined('HMS_PESAPAL_CONSUMER_KEY')) {
-    define('HMS_PESAPAL_CONSUMER_KEY', 'YOUR_PESAPAL_CONSUMER_KEY');
+    define('HMS_PESAPAL_CONSUMER_KEY', hms_env('HMS_PESAPAL_CONSUMER_KEY', 'YOUR_PESAPAL_CONSUMER_KEY'));
 }
 if (!defined('HMS_PESAPAL_CONSUMER_SECRET')) {
-    define('HMS_PESAPAL_CONSUMER_SECRET', 'YOUR_PESAPAL_CONSUMER_SECRET');
+    define('HMS_PESAPAL_CONSUMER_SECRET', hms_env('HMS_PESAPAL_CONSUMER_SECRET', 'YOUR_PESAPAL_CONSUMER_SECRET'));
 }
 if (!defined('HMS_PESAPAL_IPN_ID')) {
-    define('HMS_PESAPAL_IPN_ID', '');
+    define('HMS_PESAPAL_IPN_ID', hms_env('HMS_PESAPAL_IPN_ID', ''));
 }
 
 /** Google Maps browser key (optional). Enable Maps JavaScript API + Maps Embed API; restrict by HTTP referrer. */
 if (!defined('HMS_GOOGLE_MAPS_API_KEY')) {
-    define('HMS_GOOGLE_MAPS_API_KEY', '');
+    define('HMS_GOOGLE_MAPS_API_KEY', hms_env('HMS_GOOGLE_MAPS_API_KEY', ''));
 }
 
 /** Non-empty enables browser demo seed at public/seed_demo.php — use empty string in production. */
 if (!defined('HMS_DEMO_SETUP_KEY')) {
-    define('HMS_DEMO_SETUP_KEY', 'hms-demo-setup-2026');
+    define('HMS_DEMO_SETUP_KEY', hms_env('HMS_DEMO_SETUP_KEY', 'hms-demo-setup-2026'));
 }
 
 /**
@@ -61,32 +70,33 @@ if (!defined('HMS_DEMO_SETUP_KEY')) {
  * Transport: smtp (recommended) requires HMS_SMTP_HOST; php_mail uses PHP mail().
  */
 if (!defined('HMS_MAIL_TRANSPORT')) {
-    define('HMS_MAIL_TRANSPORT', 'smtp'); // smtp | php_mail
+    define('HMS_MAIL_TRANSPORT', hms_env('HMS_MAIL_TRANSPORT', 'smtp')); // smtp | php_mail
 }
 if (!defined('HMS_SMTP_HOST')) {
-    define('HMS_SMTP_HOST', '');
+    define('HMS_SMTP_HOST', hms_env('HMS_SMTP_HOST', ''));
 }
 if (!defined('HMS_SMTP_PORT')) {
-    define('HMS_SMTP_PORT', 587);
+    define('HMS_SMTP_PORT', (int) hms_env('HMS_SMTP_PORT', 587));
 }
 if (!defined('HMS_SMTP_USER')) {
-    define('HMS_SMTP_USER', '');
+    define('HMS_SMTP_USER', hms_env('HMS_SMTP_USER', ''));
 }
 if (!defined('HMS_SMTP_PASS')) {
-    define('HMS_SMTP_PASS', '');
+    define('HMS_SMTP_PASS', hms_env('HMS_SMTP_PASS', ''));
 }
 /** tls (STARTTLS on 587), ssl (SMTPS on 465), none (plain, e.g. local relay). */
 if (!defined('HMS_SMTP_ENCRYPTION')) {
-    define('HMS_SMTP_ENCRYPTION', 'tls');
+    define('HMS_SMTP_ENCRYPTION', hms_env('HMS_SMTP_ENCRYPTION', 'tls'));
 }
 if (!defined('HMS_SMTP_VERIFY_PEER')) {
-    define('HMS_SMTP_VERIFY_PEER', true);
+    $verifyPeer = strtolower((string) hms_env('HMS_SMTP_VERIFY_PEER', 'true'));
+    define('HMS_SMTP_VERIFY_PEER', !in_array($verifyPeer, ['0', 'false', 'no', 'off'], true));
 }
 if (!defined('HMS_MAIL_FROM')) {
-    define('HMS_MAIL_FROM', 'noreply@localhost');
+    define('HMS_MAIL_FROM', hms_env('HMS_MAIL_FROM', 'noreply@localhost'));
 }
 if (!defined('HMS_MAIL_FROM_NAME')) {
-    define('HMS_MAIL_FROM_NAME', 'Hostel Management System');
+    define('HMS_MAIL_FROM_NAME', hms_env('HMS_MAIL_FROM_NAME', 'Hostel Management System'));
 }
 
 function hms_url(string $path = ''): string

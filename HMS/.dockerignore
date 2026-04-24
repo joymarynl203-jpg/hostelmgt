@@ -1,0 +1,6 @@
+.git
+.gitignore
+config.local.php
+node_modules
+vendor
+*.log

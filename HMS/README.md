@@ -26,6 +26,19 @@ This project implements an **enhanced web-based Hostel Management System** for o
 5. Start Apache and MySQL via XAMPP.
 6. Visit `http://localhost/HMS/public/` in your browser.
 
+### Deploy on Render (Docker)
+1. Push this repository to GitHub (Render deploys from a Git repo).
+2. In Render, choose **New +** -> **Blueprint** and select this repo.
+3. Render will read `render.yaml` and create service `hms-app` using `HMS/Dockerfile`.
+4. In Render service **Environment**, set:
+   - `HMS_APP_URL` to your Render URL (e.g. `https://hms-app.onrender.com`)
+   - `HMS_DB_HOST`, `HMS_DB_NAME`, `HMS_DB_USER`, `HMS_DB_PASS` (external MySQL provider credentials)
+   - Pesapal and SMTP variables as needed for production
+5. Import `database/schema.sql` into your MySQL database.
+6. Redeploy and verify login at `/login.php`.
+
+> Note: Render does not provide managed MySQL directly. Use an external MySQL provider (e.g. Aiven, PlanetScale, Railway MySQL), then set DB env vars in Render.
+
 ### Test Seed (Recommended)
 **Option A — browser (easiest):** open once in your browser (key must match `HMS_DEMO_SETUP_KEY` in `config.php`, default below):
 

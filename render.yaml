@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: hms-app
+    runtime: docker
+    rootDir: HMS
+    healthCheckPath: /login.php
+    envVars:
+      - key: HMS_BASE_URL
+        value: /
+      - key: HMS_APP_URL
+        sync: false
+      - key: HMS_DB_HOST
+        sync: false
+      - key: HMS_DB_NAME
+        sync: false
+      - key: HMS_DB_USER
+        sync: false
+      - key: HMS_DB_PASS
+        sync: false
+      - key: HMS_PESAPAL_ENV
+        value: sandbox
+      - key: HMS_PESAPAL_CONSUMER_KEY
+        sync: false
+      - key: HMS_PESAPAL_CONSUMER_SECRET
+        sync: false
+      - key: HMS_PESAPAL_IPN_ID
+        sync: false
+      - key: HMS_DEMO_SETUP_KEY
+        value: ""
+      - key: HMS_SMTP_HOST
+        sync: false
+      - key: HMS_SMTP_PORT
+        value: "587"
+      - key: HMS_SMTP_USER
+        sync: false
+      - key: HMS_SMTP_PASS
+        sync: false
+      - key: HMS_SMTP_ENCRYPTION
+        value: tls
+      - key: HMS_SMTP_VERIFY_PEER
+        value: "true"
+      - key: HMS_MAIL_FROM
+        sync: false
+      - key: HMS_MAIL_FROM_NAME
+        value: Hostel Management System
+      - key: HMS_GOOGLE_MAPS_API_KEY
+        sync: false
