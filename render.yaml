@@ -11,11 +11,19 @@ services:
         sync: false
       - key: HMS_DB_HOST
         sync: false
+      - key: HMS_DB_PORT
+        value: "5432"
       - key: HMS_DB_NAME
         sync: false
       - key: HMS_DB_USER
         sync: false
       - key: HMS_DB_PASS
+        sync: false
+      - key: HMS_DB_DRIVER
+        value: pgsql
+      - key: HMS_DB_SSLMODE
+        value: require
+      - key: HMS_DATABASE_URL
         sync: false
       - key: HMS_PESAPAL_ENV
         value: sandbox

@@ -37,7 +37,12 @@ This project implements an **enhanced web-based Hostel Management System** for o
 5. Import `database/schema.sql` into your MySQL database.
 6. Redeploy and verify login at `/login.php`.
 
-> Note: Render does not provide managed MySQL directly. Use an external MySQL provider (e.g. Aiven, PlanetScale, Railway MySQL), then set DB env vars in Render.
+> Database note:
+> - App now supports both MySQL and PostgreSQL connection settings.
+> - For PostgreSQL on Render, set `HMS_DB_DRIVER=pgsql` and either:
+>   - provide `HMS_DATABASE_URL` (recommended), or
+>   - provide `HMS_DB_HOST`, `HMS_DB_PORT=5432`, `HMS_DB_NAME`, `HMS_DB_USER`, `HMS_DB_PASS`, `HMS_DB_SSLMODE=require`.
+> - Existing SQL files in `database/*.sql` are MySQL-oriented and should be adapted before importing into PostgreSQL.
 
 ### Test Seed (Recommended)
 **Option A — browser (easiest):** open once in your browser (key must match `HMS_DEMO_SETUP_KEY` in `config.php`, default below):

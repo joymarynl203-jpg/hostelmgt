@@ -21,6 +21,9 @@ function hms_env(string $name, $default = null)
 if (!defined('HMS_DB_HOST')) {
     define('HMS_DB_HOST', hms_env('HMS_DB_HOST', 'localhost'));
 }
+if (!defined('HMS_DB_PORT')) {
+    define('HMS_DB_PORT', (int) hms_env('HMS_DB_PORT', 3306));
+}
 if (!defined('HMS_DB_NAME')) {
     define('HMS_DB_NAME', hms_env('HMS_DB_NAME', 'hms_db'));
 }
@@ -29,6 +32,15 @@ if (!defined('HMS_DB_USER')) {
 }
 if (!defined('HMS_DB_PASS')) {
     define('HMS_DB_PASS', hms_env('HMS_DB_PASS', ''));
+}
+if (!defined('HMS_DB_DRIVER')) {
+    define('HMS_DB_DRIVER', strtolower((string) hms_env('HMS_DB_DRIVER', 'mysql'))); // mysql | pgsql
+}
+if (!defined('HMS_DB_SSLMODE')) {
+    define('HMS_DB_SSLMODE', hms_env('HMS_DB_SSLMODE', 'prefer')); // disable | allow | prefer | require | verify-ca | verify-full
+}
+if (!defined('HMS_DATABASE_URL')) {
+    define('HMS_DATABASE_URL', hms_env('HMS_DATABASE_URL', '')); // e.g. postgres://user:pass@host:5432/dbname
 }
 
 /** Web path to `public/` (leading slash, trailing slash). On production often `/` if the vhost root is `public/`. */

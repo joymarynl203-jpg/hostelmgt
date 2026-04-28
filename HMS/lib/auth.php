@@ -107,10 +107,11 @@ function auth_register_student(string $name, string $email, string $password, st
     }
 
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = hms_db()->prepare('INSERT INTO users (name, email, password_hash, role, reg_no, nin, phone, institution) VALUES (?, ?, ?, "student", ?, NULL, ?, ?)');
+    $stmt = hms_db()->prepare("INSERT INTO users (name, email, password_hash, role, reg_no, nin, phone, institution) VALUES (?, ?, ?, 'student', ?, NULL, ?, ?)");
     try {
         return $stmt->execute([$name, $email, $hash, $regNo !== '' ? $regNo : null, $phone, $institution]);
     } catch (PDOException $e) {
+        error_log('auth_register_student failed: ' . $e->getMessage());
         return false;
     }
 }
@@ -156,6 +157,7 @@ function auth_create_user(string $name, string $email, string $password, string 
         $ninParam = ($role === 'warden' || $role === 'university_admin') ? $nin : (($nin !== null && $nin !== '') ? $nin : null);
         return $stmt->execute([$name, $email, $hash, $role, $regNo, $ninParam, $phone]);
     } catch (PDOException $e) {
+        error_log('auth_create_user failed: ' . $e->getMessage());
         return false;
     }
 }

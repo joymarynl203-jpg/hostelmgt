@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-RUN docker-php-ext-install pdo pdo_mysql
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql
 
 # Serve the app from HMS/public
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
