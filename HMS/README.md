@@ -42,7 +42,10 @@ This project implements an **enhanced web-based Hostel Management System** for o
 > - For PostgreSQL on Render, set `HMS_DB_DRIVER=pgsql` and either:
 >   - provide `HMS_DATABASE_URL` (recommended), or
 >   - provide `HMS_DB_HOST`, `HMS_DB_PORT=5432`, `HMS_DB_NAME`, `HMS_DB_USER`, `HMS_DB_PASS`, `HMS_DB_SSLMODE=require`.
-> - Existing SQL files in `database/*.sql` are MySQL-oriented and should be adapted before importing into PostgreSQL.
+> - **PostgreSQL:** import `database/schema.postgresql.sql` once (not `schema.sql`, which is MySQL). From your machine:
+>   `psql "<External Database URL from Render>" -f HMS/database/schema.postgresql.sql`
+>   Or open Render Postgres → connect with any SQL client and run the file contents. Until this runs, you will see errors like `relation "users" does not exist`.
+> - Some PHP queries still use MySQL-style string quoting in SQL; if a page errors after schema load, note the file from the stack trace and we can align that query for PostgreSQL.
 
 ### Test Seed (Recommended)
 **Option A — browser (easiest):** open once in your browser (key must match `HMS_DEMO_SETUP_KEY` in `config.php`, default below):
