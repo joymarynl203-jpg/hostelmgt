@@ -45,6 +45,7 @@ This project implements an **enhanced web-based Hostel Management System** for o
 > - **PostgreSQL:** import `database/schema.postgresql.sql` once (not `schema.sql`, which is MySQL). From your machine:
 >   `psql "<External Database URL from Render>" -f HMS/database/schema.postgresql.sql`
 >   Or open Render Postgres → connect with any SQL client and run the file contents. Until this runs, you will see errors like `relation "users" does not exist`.
+> - **CSRF / “CSRF verification failed” on Render:** the app uses PHP sessions for CSRF tokens. On PostgreSQL, sessions are stored in the `hms_sessions` table by default (`HMS_SESSION_STORE=auto`). The app reads `HMS_DATABASE_URL` or Render’s **`DATABASE_URL`** (same value when the DB is linked). On first use, `hms_sessions` is created automatically if missing; you can still run `database/migrations/010_hms_sessions.postgresql.sql` manually if you prefer.
 > - Some PHP queries still use MySQL-style string quoting in SQL; if a page errors after schema load, note the file from the stack trace and we can align that query for PostgreSQL.
 
 ### Test Seed (Recommended)

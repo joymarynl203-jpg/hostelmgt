@@ -40,7 +40,22 @@ if (!defined('HMS_DB_SSLMODE')) {
     define('HMS_DB_SSLMODE', hms_env('HMS_DB_SSLMODE', 'prefer')); // disable | allow | prefer | require | verify-ca | verify-full
 }
 if (!defined('HMS_DATABASE_URL')) {
-    define('HMS_DATABASE_URL', hms_env('HMS_DATABASE_URL', '')); // e.g. postgres://user:pass@host:5432/dbname
+    // Render links PostgreSQL as DATABASE_URL on the web service; HMS_DATABASE_URL is our explicit name.
+    $dbUrl = trim((string) hms_env('HMS_DATABASE_URL', ''));
+    if ($dbUrl === '') {
+        $dbUrl = trim((string) hms_env('DATABASE_URL', ''));
+    }
+    define('HMS_DATABASE_URL', $dbUrl); // e.g. postgresql://user:pass@host:5432/dbname
+}
+
+/**
+ * Where PHP stores sessions: auto | file | database.
+ * - auto: use database-backed sessions when the app uses PostgreSQL (Render-friendly).
+ * - database: always use table hms_sessions (run database/migrations/010_hms_sessions.*.sql).
+ * - file: classic /tmp sessions (OK for single local server).
+ */
+if (!defined('HMS_SESSION_STORE')) {
+    define('HMS_SESSION_STORE', strtolower((string) hms_env('HMS_SESSION_STORE', 'auto')));
 }
 
 /** Web path to `public/` (leading slash, trailing slash). On production often `/` if the vhost root is `public/`. */
