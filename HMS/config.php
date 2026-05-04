@@ -58,6 +58,18 @@ if (!defined('HMS_SESSION_STORE')) {
     define('HMS_SESSION_STORE', strtolower((string) hms_env('HMS_SESSION_STORE', 'auto')));
 }
 
+/**
+ * Session cookie SameSite: Lax (default), Strict, or None.
+ * Use None + HTTPS only if mobile browsers still drop CSRF cookies (set on Render: HMS_SESSION_COOKIE_SAMESITE=None).
+ */
+if (!defined('HMS_SESSION_COOKIE_SAMESITE')) {
+    $ss = ucfirst(strtolower(trim((string) hms_env('HMS_SESSION_COOKIE_SAMESITE', 'Lax'))));
+    if (!in_array($ss, ['Lax', 'Strict', 'None'], true)) {
+        $ss = 'Lax';
+    }
+    define('HMS_SESSION_COOKIE_SAMESITE', $ss);
+}
+
 /** Web path to `public/` (leading slash, trailing slash). On production often `/` if the vhost root is `public/`. */
 if (!defined('HMS_BASE_URL')) {
     define('HMS_BASE_URL', hms_env('HMS_BASE_URL', '/HMS/public/'));

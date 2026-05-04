@@ -53,3 +53,5 @@ services:
         value: Hostel Management System
       - key: HMS_GOOGLE_MAPS_API_KEY
         sync: false
+      - key: HMS_SESSION_COOKIE_SAMESITE
+        value: Lax

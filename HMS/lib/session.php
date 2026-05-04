@@ -66,9 +66,18 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         || $forwardedProto === 'https'
         || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
 
-    session_start([
-        'cookie_httponly' => true,
-        'cookie_samesite' => 'Lax',
-        'cookie_secure'   => $https,
+    $sameSite = HMS_SESSION_COOKIE_SAMESITE;
+    // SameSite=None requires Secure=true (browser rule).
+    $secure = $https || ($sameSite === 'None');
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $secure,
+        'httponly' => true,
+        'samesite' => $sameSite,
     ]);
+
+    session_start();
 }
