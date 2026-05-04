@@ -138,13 +138,13 @@ CREATE INDEX idx_prt_user ON password_reset_tokens (user_id);
 CREATE INDEX idx_prt_expires ON password_reset_tokens (expires_at);
 
 -- PHP sessions (CSRF, flash, login) — required for Render / multi-instance when HMS_SESSION_STORE is auto|database
-CREATE TABLE hms_sessions (
+CREATE TABLE IF NOT EXISTS hms_sessions (
     id VARCHAR(128) NOT NULL PRIMARY KEY,
     expire BIGINT NOT NULL,
     data TEXT NOT NULL
 );
 
-CREATE INDEX idx_hms_sessions_expire ON hms_sessions (expire);
+CREATE INDEX IF NOT EXISTS idx_hms_sessions_expire ON hms_sessions (expire);
 
 -- Seed super admin rows (same bcrypt hashes as MySQL schema; rotate passwords after first login in production)
 INSERT INTO users (name, email, password_hash, role, is_active)

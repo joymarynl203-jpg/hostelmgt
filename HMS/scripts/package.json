@@ -1,0 +1,8 @@
+{
+  "name": "hms-schema-apply",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
