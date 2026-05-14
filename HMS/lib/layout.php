@@ -20,7 +20,7 @@ function layout_header(string $title, array $options = []): void
                 ['label' => 'My Payments', 'href' => hms_url('my_payments.php')],
                 ['label' => 'Maintenance', 'href' => hms_url('maintenance.php')],
                 ['label' => 'Change password', 'href' => hms_url('change_password.php')],
-                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Log out? You will need to sign in again.'],
+                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Are you sure you want to log out? You will return to the sign-in page.'],
             ];
         } elseif ($user['role'] === 'warden') {
             $links = [
@@ -33,7 +33,7 @@ function layout_header(string $title, array $options = []): void
                 ['label' => 'Payments', 'href' => hms_url('admin/payments.php')],
                 ['label' => 'Reports', 'href' => hms_url('admin/reports.php')],
                 ['label' => 'Change password', 'href' => hms_url('change_password.php')],
-                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Log out? You will need to sign in again.'],
+                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Are you sure you want to log out? You will return to the sign-in page.'],
             ];
         } else {
             $links = [
@@ -46,7 +46,7 @@ function layout_header(string $title, array $options = []): void
                 ['label' => 'Payments', 'href' => hms_url('admin/payments.php')],
                 ['label' => 'User Management', 'href' => hms_url('admin/users.php')],
                 ['label' => 'Change password', 'href' => hms_url('change_password.php')],
-                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Log out? You will need to sign in again.'],
+                ['label' => 'Logout', 'href' => hms_url('logout.php'), 'confirm' => 'Are you sure you want to log out? You will return to the sign-in page.'],
             ];
         }
     }
