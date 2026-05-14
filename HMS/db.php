@@ -84,7 +84,100 @@ function hms_db(): PDO
         exit;
     }
 
+    hms_ensure_pgsql_users_role_allows_super_admin($pdo);
+
     return $pdo;
+}
+
+/**
+ * PostgreSQL on Render (free tier): no shell/psql required. Older HMS DBs may have a users.role CHECK
+ * that omits super_admin, which blocks role updates. This runs once per request, is idempotent, and
+ * does not change password hashes. Set env HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX=1 to skip.
+ */
+function hms_ensure_pgsql_users_role_allows_super_admin(PDO $pdo): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+
+    if (hms_env('HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX', '') === '1') {
+        return;
+    }
+
+    if (!hms_db_is_pgsql($pdo)) {
+        return;
+    }
+
+    try {
+        $hasUsers = $pdo->query(
+            "SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'users'
+            )"
+        )->fetchColumn();
+        if (!$hasUsers || $hasUsers === 'f') {
+            return;
+        }
+
+        $alreadyOk = $pdo->query(
+            "SELECT EXISTS (
+                SELECT 1
+                FROM pg_constraint c
+                JOIN pg_class r ON r.oid = c.conrelid
+                JOIN pg_namespace n ON n.oid = r.relnamespace
+                WHERE c.contype = 'c'
+                  AND n.nspname = 'public'
+                  AND r.relname = 'users'
+                  AND pg_get_constraintdef(c.oid) ILIKE '%super_admin%'
+            )"
+        )->fetchColumn();
+        if ($alreadyOk && $alreadyOk !== 'f') {
+            return;
+        }
+
+        try {
+            $pdo->exec(
+                <<<'SQL'
+DO $$
+DECLARE
+  conname text;
+BEGIN
+  FOR conname IN
+    SELECT c.conname::text
+    FROM pg_constraint c
+    JOIN pg_class rel ON rel.oid = c.conrelid
+    JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+    WHERE c.contype = 'c'
+      AND nsp.nspname = 'public'
+      AND rel.relname = 'users'
+      AND pg_get_constraintdef(c.oid) ILIKE '%role%'
+  LOOP
+    EXECUTE format('ALTER TABLE users DROP CONSTRAINT IF EXISTS %I', conname);
+  END LOOP;
+END $$;
+
+ALTER TABLE users
+  ADD CONSTRAINT users_role_check
+  CHECK (role IN ('student', 'warden', 'university_admin', 'super_admin'));
+SQL
+            );
+        } catch (PDOException $e) {
+            // Duplicate from concurrent workers or partial run; migration 013 is the manual fallback.
+        }
+
+        try {
+            $pdo->exec(
+                "UPDATE users SET role = 'super_admin'
+                 WHERE LOWER(email) = 'joymarynl203@gmail.com'
+                   AND role IS DISTINCT FROM 'super_admin'"
+            );
+        } catch (PDOException $e) {
+        }
+    } catch (PDOException $e) {
+        // Table missing or permission issue; manual migration 013 still available.
+    }
 }
 
 function hms_db_is_pgsql(PDO $db): bool

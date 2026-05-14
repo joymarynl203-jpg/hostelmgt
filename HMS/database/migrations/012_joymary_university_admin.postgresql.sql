@@ -1,3 +1,5 @@
+-- Optional: promote joymarynl203@gmail.com to university_admin (not super_admin).
+-- If you need super_admin for this email on PostgreSQL, use 013_users_role_allow_super_admin_postgresql.sql instead.
 -- Promote joymarynl203@gmail.com to university administrator (day-to-day admin UI + forgot-password).
 -- Same initial password as schema seed: SuperAdmin2026!
 UPDATE users
