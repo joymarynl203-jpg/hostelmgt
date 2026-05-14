@@ -5,10 +5,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/auth.php';
 
-/** Roles allowed to use forgot-password (same as main HMS login, excluding super_admin). */
+/** Roles allowed to use forgot-password (same as main HMS login). */
 function hms_password_reset_roles(): array
 {
-    return ['student', 'warden', 'university_admin'];
+    return ['student', 'warden', 'university_admin', 'super_admin'];
 }
 
 function hms_password_reset_normalize_email(string $email): string

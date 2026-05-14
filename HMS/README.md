@@ -49,10 +49,13 @@ This project implements an **enhanced web-based Hostel Management System** for o
 > - **CSRF / “CSRF verification failed” on Render:** the app uses PHP sessions for CSRF tokens. On PostgreSQL, sessions are stored in the `hms_sessions` table by default (`HMS_SESSION_STORE=auto`). The app reads `HMS_DATABASE_URL` or Render’s **`DATABASE_URL`** (same value when the DB is linked). On first use, `hms_sessions` is created automatically if missing; you can still run `database/migrations/010_hms_sessions.postgresql.sql` manually if you prefer.
 > - Some PHP queries still use MySQL-style string quoting in SQL; if a page errors after schema load, note the file from the stack trace and we can align that query for PostgreSQL.
 
-### Super administrator
-Two accounts are seeded in `database/schema.sql` / `schema.postgresql.sql` (emails `shamirah0mar915@gmail.com` and `joymarynl203@gmail.com`). They use the **same** initial password: **`SuperAdmin2026!`**. Sign in at `login.php` like other staff, then use **Change password** as soon as possible.
+### Seeded administrator accounts
+- **`joymarynl203@gmail.com`** — **`university_admin`** (hostels, rooms, user management, reports). Initial password: **`SuperAdmin2026!`**. Use **Forgot password** if needed (NIN/phone are seeded for this account).
+- **`shamirah0mar915@gmail.com`** — **`super_admin`** (same app login; full system scope). Same initial password: **`SuperAdmin2026!`**.
 
-If your database was created before this password was documented, run `database/migrations/011_super_admin_password.sql` (MySQL) or `011_super_admin_password.postgresql.sql` (PostgreSQL) once to align hashes.
+Sign in at `login.php`, then change passwords in production.
+
+If your database was created earlier, run **`database/migrations/012_joymary_university_admin.sql`** (MySQL) or **`012_joymary_university_admin.postgresql.sql`** (PostgreSQL) once so Joymary’s row is promoted and the password hash matches. You can still run **`011_super_admin_password*.sql`** to reset both super-admin hashes if needed.
 
 ### Test Seed (Recommended)
 **Option A — browser (easiest):** open once in your browser (key must match `HMS_DEMO_SETUP_KEY` in `config.php`, default below):
