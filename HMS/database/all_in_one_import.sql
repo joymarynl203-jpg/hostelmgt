@@ -167,7 +167,8 @@ CREATE TABLE password_reset_tokens (
 INSERT INTO users (name, email, password_hash, role, is_active, nin, phone)
 VALUES
     ('Super Admin 1', 'shamirah0mar915@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1, NULL, NULL),
-    ('Super Admin 2', 'joymarynl203@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1, NULL, NULL)
+    ('Super Admin 2', 'joymarynl203@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1, NULL, NULL),
+    ('Super Admin 3', 'sekiddeumar@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1, NULL, NULL)
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     password_hash = VALUES(password_hash),

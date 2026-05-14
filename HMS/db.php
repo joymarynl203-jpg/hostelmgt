@@ -92,7 +92,8 @@ function hms_db(): PDO
 /**
  * PostgreSQL on Render (free tier): no shell/psql required. Older HMS DBs may have a users.role CHECK
  * that omits super_admin, which blocks role updates. This runs once per request, is idempotent, and
- * does not change password hashes. Set env HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX=1 to skip.
+ * does not change password hashes for existing rows. Inserts sekiddeumar@gmail.com when missing
+ * (seed password SuperAdmin2026!). Set env HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX=1 to skip.
  */
 function hms_ensure_pgsql_users_role_allows_super_admin(PDO $pdo): void
 {
@@ -133,13 +134,10 @@ function hms_ensure_pgsql_users_role_allows_super_admin(PDO $pdo): void
                   AND pg_get_constraintdef(c.oid) ILIKE '%super_admin%'
             )"
         )->fetchColumn();
-        if ($alreadyOk && $alreadyOk !== 'f') {
-            return;
-        }
-
-        try {
-            $pdo->exec(
-                <<<'SQL'
+        if (!($alreadyOk && $alreadyOk !== 'f')) {
+            try {
+                $pdo->exec(
+                    <<<'SQL'
 DO $$
 DECLARE
   conname text;
@@ -162,16 +160,28 @@ ALTER TABLE users
   ADD CONSTRAINT users_role_check
   CHECK (role IN ('student', 'warden', 'university_admin', 'super_admin'));
 SQL
-            );
-        } catch (PDOException $e) {
-            // Duplicate from concurrent workers or partial run; migration 013 is the manual fallback.
+                );
+            } catch (PDOException $e) {
+                // Duplicate from concurrent workers or partial run; migration 013 is the manual fallback.
+            }
         }
 
         try {
             $pdo->exec(
                 "UPDATE users SET role = 'super_admin'
-                 WHERE LOWER(email) = 'joymarynl203@gmail.com'
+                 WHERE LOWER(email) IN ('joymarynl203@gmail.com', 'sekiddeumar@gmail.com')
                    AND role IS DISTINCT FROM 'super_admin'"
+            );
+        } catch (PDOException $e) {
+        }
+
+        try {
+            $pdo->exec(
+                <<<'SQL'
+INSERT INTO users (name, email, password_hash, role, is_active, nin, phone)
+SELECT 'Super Admin 3', 'sekiddeumar@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1, NULL, NULL
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE LOWER(email) = 'sekiddeumar@gmail.com')
+SQL
             );
         } catch (PDOException $e) {
         }

@@ -95,6 +95,7 @@ require_once __DIR__ . '/../config.php';
                     <div class="d-flex flex-wrap gap-2">
                         <a class="contact-cta-link" href="mailto:shamirah0mar915@gmail.com">shamirah0mar915@gmail.com</a>
                         <a class="contact-cta-link" href="mailto:joymarynl203@gmail.com">joymarynl203@gmail.com</a>
+                        <a class="contact-cta-link" href="mailto:sekiddeumar@gmail.com">sekiddeumar@gmail.com</a>
                     </div>
                 </div>
             </div>

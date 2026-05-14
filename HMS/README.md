@@ -50,16 +50,17 @@ This project implements an **enhanced web-based Hostel Management System** for o
 > - Some PHP queries still use MySQL-style string quoting in SQL; if a page errors after schema load, note the file from the stack trace and we can align that query for PostgreSQL.
 
 ### Seeded administrator accounts
-Both addresses use the same initial password **`SuperAdmin2026!`** (change after first login).
+All three addresses use the same initial password **`SuperAdmin2026!`** (change after first login).
 
-- **`joymarynl203@gmail.com`** — **`super_admin`**
 - **`shamirah0mar915@gmail.com`** — **`super_admin`**
+- **`joymarynl203@gmail.com`** — **`super_admin`**
+- **`sekiddeumar@gmail.com`** — **`super_admin`**
 
 Sign in at `login.php`. **Forgot password** works for these roles.
 
-**PostgreSQL “permission denied” / CHECK constraint when saving `super_admin`:** older databases may have been created with a `users.role` check that only allows `student`, `warden`, and `university_admin`. On **Render’s free tier** you often cannot open a shell or run `psql` against the DB; the app **auto-fixes this on the first PostgreSQL connection** after deploy (see `hms_ensure_pgsql_users_role_allows_super_admin` in `db.php`). Deploy the latest code, load any page that hits the database (e.g. `login.php`), and the constraint is rebuilt; Joymary’s row is promoted to `super_admin` **without** resetting her password. Set **`HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX=1`** if you want to turn that off. You can still run **`database/migrations/013_users_role_allow_super_admin_postgresql.sql`** manually if you prefer (that script also resets Joymary’s password hash to the seed value).
+**PostgreSQL “permission denied” / CHECK constraint when saving `super_admin`:** older databases may have been created with a `users.role` check that only allows `student`, `warden`, and `university_admin`. On **Render’s free tier** you often cannot open a shell or run `psql` against the DB; the app **auto-fixes this on the first PostgreSQL connection** after deploy (see `hms_ensure_pgsql_users_role_allows_super_admin` in `db.php`). Deploy the latest code, load any page that hits the database (e.g. `login.php`), and the constraint is rebuilt; **`joymarynl203@gmail.com`** and **`sekiddeumar@gmail.com`** are promoted to `super_admin` without changing existing password hashes, and **sekiddeumar** is inserted when that row is still missing. Set **`HMS_DISABLE_PG_ROLE_SUPER_ADMIN_AUTO_FIX=1`** if you want to turn that off. You can still run **`database/migrations/013_users_role_allow_super_admin_postgresql.sql`** manually if you prefer (that script also resets the seed password hashes for those two emails to **`SuperAdmin2026!`**).
 
-If you previously ran **`012_joymary_university_admin*.sql`** (which sets Joymary to `university_admin`), run **013** to switch back to `super_admin` and fix the constraint. **`011_super_admin_password*.sql`** still resets hashes if needed.
+If you previously ran **`012_joymary_university_admin*.sql`** (which sets Joymary to `university_admin`), run **013** to switch back to `super_admin` and fix the constraint. **`011_super_admin_password*.sql`** still resets hashes if needed. For an **existing** database that was created before this account existed, run **`014_sekiddeumar_super_admin.sql`** (MySQL) or **`014_sekiddeumar_super_admin_postgresql.sql`** (PostgreSQL) once, or rely on the PostgreSQL auto-fix on first connection to insert the row when missing.
 
 ### Test Seed (Recommended)
 **Option A — browser (easiest):** open once in your browser (key must match `HMS_DEMO_SETUP_KEY` in `config.php`, default below):
