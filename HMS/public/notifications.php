@@ -25,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $section = (string)($_POST['section'] ?? '');
         if ($section === 'general') {
             $db->prepare(
-                'UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0 AND type IN ("booking", "payment", "system")'
+                'UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0 AND type IN (\'booking\', \'payment\', \'system\')'
             )->execute([$userId]);
             flash_set('success', 'All general notifications marked as read.');
         } elseif ($section === 'maintenance') {
             $db->prepare(
-                'UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0 AND type = "maintenance"'
+                'UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0 AND type = \'maintenance\''
             )->execute([$userId]);
             flash_set('success', 'All maintenance notifications marked as read.');
         }
@@ -51,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $unreadGeneralStmt = $db->prepare(
-    'SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0 AND type IN ("booking", "payment", "system")'
+    'SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0 AND type IN (\'booking\', \'payment\', \'system\')'
 );
 $unreadGeneralStmt->execute([$userId]);
 $unreadGeneral = (int)($unreadGeneralStmt->fetch()['c'] ?? 0);
 
 $unreadMaintStmt = $db->prepare(
-    'SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0 AND type = "maintenance"'
+    'SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0 AND type = \'maintenance\''
 );
 $unreadMaintStmt->execute([$userId]);
 $unreadMaintenance = (int)($unreadMaintStmt->fetch()['c'] ?? 0);

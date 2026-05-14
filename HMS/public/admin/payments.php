@@ -14,8 +14,8 @@ $role = $user['role'];
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';
@@ -43,7 +43,7 @@ if (!in_array($sortBy, $allowedSort, true)) {
     $sortBy = 'outstanding_desc';
 }
 
-$paidSubSql = '(SELECT COALESCE(SUM(p3.amount), 0) FROM payments p3 WHERE p3.booking_id = b.id AND p3.status = "successful")';
+$paidSubSql = '(SELECT COALESCE(SUM(p3.amount), 0) FROM payments p3 WHERE p3.booking_id = b.id AND p3.status = \'successful\')';
 $orderBySql = match ($sortBy) {
     'outstanding_asc' => 'GREATEST(0, b.total_due - ' . $paidSubSql . ') ASC, b.requested_at DESC',
     'student_asc' => 'u.name ASC, u.id ASC, b.id DESC',
@@ -61,7 +61,7 @@ if ($role === 'warden') {
     $scopeParams = [$userId];
 }
 
-$bookingWhere = [$scopeSql, 'b.status IN ("pending","approved","checked_in","checked_out")'];
+$bookingWhere = [$scopeSql, 'b.status IN (\'pending\',\'approved\',\'checked_in\',\'checked_out\')'];
 $bookingParams = $scopeParams;
 if ($hostelId > 0) {
     $bookingWhere[] = 'h.id = ?';
@@ -72,29 +72,29 @@ if ($balanceFilter === 'outstanding') {
     $bookingWhere[] = 'b.total_due > 0';
     $bookingWhere[] = 'b.total_due > (
         SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2
-        WHERE p2.booking_id = b.id AND p2.status = "successful"
+        WHERE p2.booking_id = b.id AND p2.status = \'successful\'
     )';
     $bookingWhere[] = '(
         SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2
-        WHERE p2.booking_id = b.id AND p2.status = "successful"
+        WHERE p2.booking_id = b.id AND p2.status = \'successful\'
     ) >= (b.total_due * 0.20)';
 } elseif ($balanceFilter === 'settled') {
     $bookingWhere[] = 'b.total_due <= (
         SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2
-        WHERE p2.booking_id = b.id AND p2.status = "successful"
+        WHERE p2.booking_id = b.id AND p2.status = \'successful\'
     )';
 }
 
 $bookingWhereSql = implode(' AND ', $bookingWhere);
 
-$scopeOnlyWhere = [$scopeSql, 'b.status IN ("pending","approved","checked_in","checked_out")'];
+$scopeOnlyWhere = [$scopeSql, 'b.status IN (\'pending\',\'approved\',\'checked_in\',\'checked_out\')'];
 $scopeOnlyParams = $scopeParams;
 if ($hostelId > 0) {
     $scopeOnlyWhere[] = 'h.id = ?';
     $scopeOnlyParams[] = $hostelId;
 }
 $scopeOnlySql = implode(' AND ', $scopeOnlyWhere);
-$paidSub = '(SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2 WHERE p2.booking_id = b.id AND p2.status = "successful")';
+$paidSub = '(SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2 WHERE p2.booking_id = b.id AND p2.status = \'successful\')';
 
 $scopeCountsStmt = $db->prepare('
     SELECT
@@ -125,11 +125,11 @@ $summaryStmt = $db->prepare('
         COUNT(*) AS booking_count,
         COALESCE(SUM(GREATEST(0, b.total_due - (
             SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2
-            WHERE p2.booking_id = b.id AND p2.status = "successful"
+            WHERE p2.booking_id = b.id AND p2.status = \'successful\'
         ))), 0) AS total_outstanding,
         COALESCE(SUM((
             SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2
-            WHERE p2.booking_id = b.id AND p2.status = "successful"
+            WHERE p2.booking_id = b.id AND p2.status = \'successful\'
         )), 0) AS total_paid_on_bookings,
         COALESCE(SUM(b.total_due), 0) AS total_due_on_bookings
     FROM bookings b
@@ -155,12 +155,12 @@ $bookingsStmt = $db->prepare('
         (
             SELECT COALESCE(SUM(p.amount), 0)
             FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "successful"
+            WHERE p.booking_id = b.id AND p.status = \'successful\'
         ) AS paid_amount,
         (
             SELECT COALESCE(SUM(p.amount), 0)
             FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "pending"
+            WHERE p.booking_id = b.id AND p.status = \'pending\'
         ) AS pending_amount
     FROM bookings b
     JOIN users u ON u.id = b.student_id
@@ -173,7 +173,7 @@ $bookingsStmt = $db->prepare('
 $bookingsStmt->execute($bookingParams);
 $bookingRows = $bookingsStmt->fetchAll();
 
-$txWhere = [$scopeSql, 'p.status IN ("successful", "failed")'];
+$txWhere = [$scopeSql, 'p.status IN (\'successful\', \'failed\')'];
 $txParams = $scopeParams;
 if ($hostelId > 0) {
     $txWhere[] = 'h.id = ?';

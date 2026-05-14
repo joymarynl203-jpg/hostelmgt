@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../db.php';
+
 /**
  * Pay-first booking: 20% deposit is taken before a bookings row is created,
  * so two students cannot hold the same room on "pending booking" alone.
@@ -7,13 +9,14 @@
 
 function hms_expire_stale_deposit_intents(PDO $db): void
 {
+    $cutoff = hms_sql_minutes_ago($db, 45);
     $db->prepare('
         UPDATE payments
-        SET status = "failed",
-            gateway_status = "intent_expired"
+        SET status = \'failed\',
+            gateway_status = \'intent_expired\'
         WHERE booking_id IS NULL
-          AND status = "pending"
-          AND created_at < DATE_SUB(NOW(), INTERVAL 45 MINUTE)
+          AND status = \'pending\'
+          AND created_at < ' . $cutoff . '
     ')->execute();
 }
 
@@ -30,10 +33,10 @@ function hms_room_pipeline_reserved_count(PDO $db, int $roomId, int $excludePreb
     $stmt = $db->prepare('
         SELECT
             (SELECT COUNT(*) FROM bookings b
-             WHERE b.room_id = ? AND b.status IN ("pending", "approved", "checked_in"))
+             WHERE b.room_id = ? AND b.status IN (\'pending\', \'approved\', \'checked_in\'))
             + (SELECT COUNT(*) FROM payments p
                WHERE p.room_id = ? AND p.booking_id IS NULL
-                 AND p.status IN ("pending", "successful")
+                 AND p.status IN (\'pending\', \'successful\')
                  AND (? = 0 OR p.id <> ?)) AS n
     ');
     $stmt->execute([$roomId, $roomId, $excludePrebookingPaymentId, $excludePrebookingPaymentId]);
@@ -115,7 +118,7 @@ function hms_assert_room_ready_for_pay_first_deposit(PDO $db, int $roomId, int $
 
     $dupStmt = $db->prepare('
         SELECT id FROM payments
-        WHERE room_id = ? AND student_user_id = ? AND booking_id IS NULL AND status = "pending"
+        WHERE room_id = ? AND student_user_id = ? AND booking_id IS NULL AND status = \'pending\'
         LIMIT 1
     ');
     $dupStmt->execute([$roomId, $studentUserId]);
@@ -176,7 +179,7 @@ function hms_finalize_prebooking_deposit_payment(PDO $db, int $paymentId): int
     $cap = (int)($room['capacity'] ?? 0);
     $allocStmt = $db->prepare('
         SELECT COUNT(*) AS c FROM bookings
-        WHERE room_id = ? AND status IN ("pending", "approved", "checked_in")
+        WHERE room_id = ? AND status IN (\'pending\', \'approved\', \'checked_in\')
     ');
     $allocStmt->execute([$roomId]);
     $bookingCount = (int)($allocStmt->fetch()['c'] ?? 0);
@@ -191,7 +194,7 @@ function hms_finalize_prebooking_deposit_payment(PDO $db, int $paymentId): int
 
     $ins = $db->prepare('
         INSERT INTO bookings (student_id, room_id, status, months, start_date, end_date, total_due)
-        VALUES (?, ?, "pending", ?, ?, ?, ?)
+        VALUES (?, ?, \'pending\', ?, ?, ?, ?)
     ');
     $ins->execute([$studentUserId, $roomId, $semesters, $startDate, $endDate, $totalDue]);
     $bookingId = (int)$db->lastInsertId();

@@ -13,14 +13,16 @@ $db = hms_db();
 $user = hms_current_user();
 $userId = (int)$user['id'];
 $role = $user['role'];
-$nearbyColStmt = $db->query("SHOW COLUMNS FROM hostels LIKE 'nearby_institutions'");
+$nearbyColStmt = hms_db_is_pgsql($db)
+    ? $db->query("SELECT 1 AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'hostels' AND column_name = 'nearby_institutions' LIMIT 1")
+    : $db->query("SHOW COLUMNS FROM hostels LIKE 'nearby_institutions'");
 $hasNearbyInstitutions = (bool)$nearbyColStmt->fetch();
 
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';
@@ -205,8 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$wardens = $db->query('SELECT id, name, email FROM users WHERE role = "warden" ORDER BY name ASC')->fetchAll();
-$institutionOptions = $db->query('SELECT DISTINCT TRIM(institution) AS institution FROM users WHERE institution IS NOT NULL AND TRIM(institution) <> "" ORDER BY institution ASC')->fetchAll();
+$wardens = $db->query('SELECT id, name, email FROM users WHERE role = \'warden\' ORDER BY name ASC')->fetchAll();
+$institutionOptions = $db->query('SELECT DISTINCT TRIM(institution) AS institution FROM users WHERE institution IS NOT NULL AND TRIM(institution) <> \'\' ORDER BY institution ASC')->fetchAll();
 
 if ($role === 'warden') {
     $hostels = $db->prepare('

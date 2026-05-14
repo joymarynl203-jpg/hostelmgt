@@ -15,7 +15,7 @@ function hms_pesapal_run_success_followup(PDO $db, int $bookingId, int $studentU
             h.id AS hostel_id,
             h.name AS hostel_name,
             h.managed_by,
-            (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE booking_id = b.id AND status = "successful") AS paid_amount
+            (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE booking_id = b.id AND status = \'successful\') AS paid_amount
         FROM bookings b
         JOIN rooms r ON r.id = b.room_id
         JOIN hostels h ON h.id = r.hostel_id
@@ -40,8 +40,8 @@ function hms_pesapal_run_success_followup(PDO $db, int $bookingId, int $studentU
         $admins = $db->prepare('
             SELECT al.actor_user_id AS id
             FROM audit_logs al
-            WHERE al.entity_type = "hostel"
-              AND al.action = "hostel_created"
+            WHERE al.entity_type = \'hostel\'
+              AND al.action = \'hostel_created\'
               AND al.entity_id = ?
         ');
         $admins->execute([(int)($bookingData['hostel_id'] ?? 0)]);

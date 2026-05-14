@@ -15,8 +15,8 @@ $role = $user['role'];
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $depStmt = $db->prepare('
             SELECT
                 b.total_due,
-                (SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.booking_id = b.id AND p.status = "successful") AS paid_amount
+                (SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.booking_id = b.id AND p.status = \'successful\') AS paid_amount
             FROM bookings b
             WHERE b.id = ?
             LIMIT 1
@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $db->prepare('
             UPDATE bookings
-            SET status = "approved",
+            SET status = \'approved\',
                 approved_by = ?,
                 approved_at = NOW(),
                 updated_at = NOW()
@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect_to(hms_url('admin/bookings.php'));
         }
 
-        $db->prepare('UPDATE bookings SET status = "rejected", updated_at = NOW() WHERE id = ?')->execute([$bookingId]);
+        $db->prepare('UPDATE bookings SET status = \'rejected\', updated_at = NOW() WHERE id = ?')->execute([$bookingId]);
         hms_notify($studentId, 'Your hostel booking request was rejected.', 'booking');
         hms_audit_log($userId, 'booking_rejected', 'booking', $bookingId, 'Rejected by actor.');
         flash_set('success', 'Booking rejected.');
@@ -158,11 +158,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $bookingUpdatedStmt = $db->prepare('
                 UPDATE bookings
-                SET status = "checked_in",
+                SET status = \'checked_in\',
                     checked_in_by = ?,
                     checked_in_at = NOW(),
                     updated_at = NOW()
-                WHERE id = ? AND status = "approved"
+                WHERE id = ? AND status = \'approved\'
             ');
             $bookingUpdatedStmt->execute([$userId, $bookingId]);
             if ($bookingUpdatedStmt->rowCount() !== 1) {
@@ -220,11 +220,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $bookingUpdatedStmt = $db->prepare('
                 UPDATE bookings
-                SET status = "checked_out",
+                SET status = \'checked_out\',
                     checked_out_by = ?,
                     checked_out_at = NOW(),
                     updated_at = NOW()
-                WHERE id = ? AND status = "checked_in"
+                WHERE id = ? AND status = \'checked_in\'
             ');
             $bookingUpdatedStmt->execute([$userId, $bookingId]);
             if ($bookingUpdatedStmt->rowCount() !== 1) {
@@ -257,7 +257,7 @@ $queueSql = '
     JOIN users u ON u.id = b.student_id
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
-    WHERE b.status IN ("pending","approved","checked_in")
+    WHERE b.status IN (\'pending\',\'approved\',\'checked_in\')
 ';
 if ($role === 'warden') {
     $queueSql .= ' AND h.managed_by = ? ';

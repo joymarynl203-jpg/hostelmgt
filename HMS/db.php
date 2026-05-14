@@ -87,3 +87,28 @@ function hms_db(): PDO
     return $pdo;
 }
 
+function hms_db_is_pgsql(PDO $db): bool
+{
+    return strtolower((string) $db->getAttribute(PDO::ATTR_DRIVER_NAME)) === 'pgsql';
+}
+
+/** SQL expression: timestamp N days before now (WHERE col >= expr). */
+function hms_sql_days_ago(PDO $db, int $days): string
+{
+    $d = max(0, min(3650, $days));
+    if (hms_db_is_pgsql($db)) {
+        return "(NOW() - INTERVAL '" . $d . " days')";
+    }
+    return 'DATE_SUB(NOW(), INTERVAL ' . $d . ' DAY)';
+}
+
+/** SQL expression: timestamp N minutes before now (WHERE col < expr). */
+function hms_sql_minutes_ago(PDO $db, int $minutes): string
+{
+    $m = max(0, min(525600, $minutes));
+    if (hms_db_is_pgsql($db)) {
+        return "(NOW() - INTERVAL '" . $m . " minutes')";
+    }
+    return 'DATE_SUB(NOW(), INTERVAL ' . $m . ' MINUTE)';
+}
+

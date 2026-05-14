@@ -319,8 +319,8 @@ function pesapal_persist_payment_status(PDO $db, int $paymentId, array $statusRe
             callback_payload = ?,
             paid_at = CASE WHEN ? IS NULL THEN paid_at ELSE ? END,
             provider = CASE
-                WHEN LOWER(?) LIKE "%mtn%" THEN "mtn"
-                WHEN LOWER(?) LIKE "%airtel%" THEN "airtel"
+                WHEN LOWER(?) LIKE \'%mtn%\' THEN \'mtn\'
+                WHEN LOWER(?) LIKE \'%airtel%\' THEN \'airtel\'
                 ELSE provider
             END
         WHERE id = ?

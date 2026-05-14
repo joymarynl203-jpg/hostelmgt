@@ -16,8 +16,8 @@ $role = $user['role'];
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';

@@ -39,14 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($booking['status'] !== 'pending') {
                 flash_set('error', 'Only pending bookings can be cancelled.');
             } else {
-                $db->prepare('UPDATE bookings SET status = "rejected", updated_at = NOW() WHERE id = ?')->execute([$bookingId]);
+                $db->prepare('UPDATE bookings SET status = \'rejected\', updated_at = NOW() WHERE id = ?')->execute([$bookingId]);
                 hms_audit_log($userId, 'booking_cancelled', 'booking', $bookingId, 'Booking rejected/cancelled by student.');
                 // Notify admins if needed
                 $admins = $db->prepare('
                     SELECT al.actor_user_id AS id
                     FROM audit_logs al
-                    WHERE al.entity_type = "hostel"
-                      AND al.action = "hostel_created"
+                    WHERE al.entity_type = \'hostel\'
+                      AND al.action = \'hostel_created\'
                       AND al.entity_id = ?
                 ');
                 $admins->execute([(int)($booking['hostel_id'] ?? 0)]);
@@ -77,10 +77,10 @@ $availableRooms = $db->query('
         h.rent_period_start,
         h.rent_period_end,
         (SELECT COUNT(*) FROM bookings b
-         WHERE b.room_id = r.id AND b.status IN ("pending", "approved", "checked_in")) AS reserved_bookings,
+         WHERE b.room_id = r.id AND b.status IN (\'pending\', \'approved\', \'checked_in\')) AS reserved_bookings,
         (SELECT COUNT(*) FROM payments p
          WHERE p.room_id = r.id AND p.booking_id IS NULL
-           AND p.status IN ("pending", "successful")) AS reserved_prebook
+           AND p.status IN (\'pending\', \'successful\')) AS reserved_prebook
     FROM rooms r
     JOIN hostels h ON h.id = r.hostel_id
     WHERE h.is_active = 1
@@ -88,10 +88,10 @@ $availableRooms = $db->query('
       AND h.rent_period_end IS NOT NULL
       AND (
           (SELECT COUNT(*) FROM bookings b
-           WHERE b.room_id = r.id AND b.status IN ("pending", "approved", "checked_in"))
+           WHERE b.room_id = r.id AND b.status IN (\'pending\', \'approved\', \'checked_in\'))
           + (SELECT COUNT(*) FROM payments p
              WHERE p.room_id = r.id AND p.booking_id IS NULL
-               AND p.status IN ("pending", "successful"))
+               AND p.status IN (\'pending\', \'successful\'))
       ) < r.capacity
     ORDER BY h.name ASC, r.room_number ASC
 ')->fetchAll();
@@ -103,10 +103,10 @@ if ($selectedRoomId > 0) {
         SELECT r.*, h.name AS hostel_name, h.is_active,
             h.rent_period_start, h.rent_period_end,
             (SELECT COUNT(*) FROM bookings b
-             WHERE b.room_id = r.id AND b.status IN ("pending", "approved", "checked_in")) AS reserved_bookings,
+             WHERE b.room_id = r.id AND b.status IN (\'pending\', \'approved\', \'checked_in\')) AS reserved_bookings,
             (SELECT COUNT(*) FROM payments p
              WHERE p.room_id = r.id AND p.booking_id IS NULL
-               AND p.status IN ("pending", "successful")) AS reserved_prebook
+               AND p.status IN (\'pending\', \'successful\')) AS reserved_prebook
         FROM rooms r
         JOIN hostels h ON h.id = r.hostel_id
         WHERE r.id = ?
@@ -134,7 +134,7 @@ $bookings = $db->prepare('
     SELECT b.*,
         r.room_number,
         h.name AS hostel_name,
-        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = "successful") AS paid_amount
+        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = \'successful\') AS paid_amount
     FROM bookings b
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id

@@ -11,7 +11,9 @@ require_login();
 $db = hms_db();
 $user = hms_current_user();
 $userId = (int) $user['id'];
-$nearbyColStmt = $db->query("SHOW COLUMNS FROM hostels LIKE 'nearby_institutions'");
+$nearbyColStmt = hms_db_is_pgsql($db)
+    ? $db->query("SELECT 1 AS c FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'hostels' AND column_name = 'nearby_institutions' LIMIT 1")
+    : $db->query("SHOW COLUMNS FROM hostels LIKE 'nearby_institutions'");
 $hasNearbyInstitutions = (bool)$nearbyColStmt->fetch();
 
 $hostelId = (int) ($_GET['hostel_id'] ?? 0);
@@ -44,10 +46,10 @@ $roomsSql = '
     SELECT
         r.*,
         (SELECT COUNT(*) FROM bookings b
-         WHERE b.room_id = r.id AND b.status IN ("pending", "approved", "checked_in")) AS reserved_bookings,
+         WHERE b.room_id = r.id AND b.status IN (\'pending\', \'approved\', \'checked_in\')) AS reserved_bookings,
         (SELECT COUNT(*) FROM payments p
          WHERE p.room_id = r.id AND p.booking_id IS NULL
-           AND p.status IN ("pending", "successful")) AS reserved_prebook
+           AND p.status IN (\'pending\', \'successful\')) AS reserved_prebook
     FROM rooms r
     WHERE r.hostel_id = ?
     ORDER BY r.gender ASC, r.room_number ASC

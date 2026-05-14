@@ -16,8 +16,8 @@ $role = $user['role'];
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SELECT u.id
                 FROM users u
                 WHERE u.id = ?
-                  AND u.role = "student"
+                  AND u.role = \'student\'
                   AND EXISTS (
                     SELECT 1
                     FROM bookings b2
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$chk->fetch()) {
                 flash_set('error', 'You can only change accounts for students linked to your hostels.');
             } else {
-                $db->prepare('UPDATE users SET is_active = ? WHERE id = ? AND role = "student"')->execute([$newActive, $studentId]);
+                $db->prepare('UPDATE users SET is_active = ? WHERE id = ? AND role = \'student\'')->execute([$newActive, $studentId]);
                 hms_audit_log($userId, $newActive === 1 ? 'student_activated' : 'student_deactivated', 'user', $studentId, 'Student is_active set to ' . $newActive);
                 flash_set('success', $newActive === 1 ? 'Student account reactivated.' : 'Student account deactivated. They can no longer sign in.');
             }
@@ -109,14 +109,14 @@ if ($view !== 'all') {
 }
 
 if ($view === 'all') {
-    $statusClause = 'b.status <> "rejected"';
+    $statusClause = 'b.status <> \'rejected\'';
 } else {
-    $statusClause = 'b.status IN ("pending","approved","checked_in")';
+    $statusClause = 'b.status IN (\'pending\',\'approved\',\'checked_in\')';
 }
 
 // Same rule as booking approvals: at least 20% of total_due must be paid (successful payments only).
 $depositMetClause = '(
-        (SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2 WHERE p2.booking_id = b.id AND p2.status = "successful")
+        (SELECT COALESCE(SUM(p2.amount), 0) FROM payments p2 WHERE p2.booking_id = b.id AND p2.status = \'successful\')
         >= (b.total_due * 0.20)
     )';
 
@@ -154,9 +154,9 @@ $sql = '
         u.phone,
         u.institution AS student_institution,
         u.is_active AS student_is_active,
-        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = "successful") AS paid_amount
+        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = \'successful\') AS paid_amount
     FROM bookings b
-    INNER JOIN users u ON u.id = b.student_id AND u.role = "student"
+    INNER JOIN users u ON u.id = b.student_id AND u.role = \'student\'
     INNER JOIN rooms r ON r.id = b.room_id
     INNER JOIN hostels h ON h.id = r.hostel_id
     WHERE ' . $statusClause . '

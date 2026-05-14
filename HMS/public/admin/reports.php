@@ -15,8 +15,8 @@ $role = $user['role'];
 $adminHostelScope = 'EXISTS (
     SELECT 1
     FROM audit_logs al
-    WHERE al.entity_type = "hostel"
-      AND al.action = "hostel_created"
+    WHERE al.entity_type = \'hostel\'
+      AND al.action = \'hostel_created\'
       AND al.entity_id = h.id
       AND al.actor_user_id = ?
 )';
@@ -31,6 +31,7 @@ if ($from === '') {
 if ($to === '') {
     $to = date('Y-m-d');
 }
+$toExclusive = date('Y-m-d', strtotime($to . ' +1 day'));
 
 // Occupancy per hostel
 $occWhere = [];
@@ -89,10 +90,10 @@ $bookingStatsStmt = $db->prepare('
     FROM bookings b
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
-    WHERE ' . $bookingWhere . ' AND b.requested_at >= ? AND b.requested_at < DATE_ADD(?, INTERVAL 1 DAY)
+    WHERE ' . $bookingWhere . ' AND b.requested_at >= ? AND b.requested_at < ?
     GROUP BY b.status
 ');
-$bookingStatsStmt->execute(array_merge($bookingParams, [$from, $to]));
+$bookingStatsStmt->execute(array_merge($bookingParams, [$from, $toExclusive]));
 $bookingStatsRows = $bookingStatsStmt->fetchAll();
 $bookingStats = [];
 foreach ($bookingStatsRows as $row) {
@@ -117,19 +118,19 @@ if ($hostelId > 0) {
 
 $paymentTotalStmt = $db->prepare('
     SELECT
-        COALESCE(SUM(CASE WHEN p.status = "successful" THEN p.amount ELSE 0 END), 0) AS total_success_amount,
-        COALESCE(SUM(CASE WHEN p.status = "failed" THEN p.amount ELSE 0 END), 0) AS total_failed_amount,
-        COUNT(CASE WHEN p.status = "successful" THEN 1 END) AS success_count,
-        COUNT(CASE WHEN p.status = "failed" THEN 1 END) AS failed_count
+        COALESCE(SUM(CASE WHEN p.status = \'successful\' THEN p.amount ELSE 0 END), 0) AS total_success_amount,
+        COALESCE(SUM(CASE WHEN p.status = \'failed\' THEN p.amount ELSE 0 END), 0) AS total_failed_amount,
+        COUNT(CASE WHEN p.status = \'successful\' THEN 1 END) AS success_count,
+        COUNT(CASE WHEN p.status = \'failed\' THEN 1 END) AS failed_count
     FROM payments p
     JOIN bookings b ON b.id = p.booking_id
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
     WHERE ' . $paymentWhere . '
-      AND p.status IN ("successful", "failed")
-      AND p.created_at >= ? AND p.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+      AND p.status IN (\'successful\', \'failed\')
+      AND p.created_at >= ? AND p.created_at < ?
 ');
-$paymentTotalStmt->execute(array_merge($paymentParams, [$from, $to]));
+$paymentTotalStmt->execute(array_merge($paymentParams, [$from, $toExclusive]));
 $paymentTotals = $paymentTotalStmt->fetch() ?: [];
 
 $methodStmt = $db->prepare('
@@ -141,13 +142,13 @@ $methodStmt = $db->prepare('
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
     WHERE ' . $paymentWhere . '
-      AND p.status IN ("successful", "failed")
-      AND p.created_at >= ? AND p.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+      AND p.status IN (\'successful\', \'failed\')
+      AND p.created_at >= ? AND p.created_at < ?
     GROUP BY p.method, p.provider
     ORDER BY amount DESC
     LIMIT 12
 ');
-$methodStmt->execute(array_merge($paymentParams, [$from, $to]));
+$methodStmt->execute(array_merge($paymentParams, [$from, $toExclusive]));
 $methodBreakdown = $methodStmt->fetchAll();
 
 // Chart-ready data
@@ -211,7 +212,7 @@ if ($role === 'warden') {
     $outBookWhere[] = $adminHostelScope;
     $outBookParams[] = $userId;
 }
-$outBookWhere[] = 'b.status IN ("pending","approved","checked_in","checked_out")';
+$outBookWhere[] = 'b.status IN (\'pending\',\'approved\',\'checked_in\',\'checked_out\')';
 if ($hostelId > 0) {
     $outBookWhere[] = 'h.id = ?';
     $outBookParams[] = $hostelId;
@@ -223,11 +224,11 @@ $outstandingAgg = $db->prepare('
         COUNT(*) AS active_bookings,
         COALESCE(SUM(GREATEST(0, b.total_due - (
             SELECT COALESCE(SUM(p.amount), 0) FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "successful"
+            WHERE p.booking_id = b.id AND p.status = \'successful\'
         ))), 0) AS total_outstanding,
         COALESCE(SUM((
             SELECT COALESCE(SUM(p.amount), 0) FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "successful"
+            WHERE p.booking_id = b.id AND p.status = \'successful\'
         )), 0) AS total_paid_on_bookings,
         COALESCE(SUM(b.total_due), 0) AS total_due_on_bookings
     FROM bookings b
@@ -245,11 +246,11 @@ $outstandingByHostel = $db->prepare('
         COALESCE(SUM(b.total_due), 0) AS total_due,
         COALESCE(SUM((
             SELECT COALESCE(SUM(p.amount), 0) FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "successful"
+            WHERE p.booking_id = b.id AND p.status = \'successful\'
         )), 0) AS total_paid,
         COALESCE(SUM(GREATEST(0, b.total_due - (
             SELECT COALESCE(SUM(p.amount), 0) FROM payments p
-            WHERE p.booking_id = b.id AND p.status = "successful"
+            WHERE p.booking_id = b.id AND p.status = \'successful\'
         ))), 0) AS outstanding
     FROM bookings b
     JOIN rooms r ON r.id = b.room_id
@@ -271,12 +272,12 @@ $dailyStmt = $db->prepare('
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
     WHERE ' . $paymentWhere . '
-      AND p.status = "successful"
-      AND p.created_at >= ? AND p.created_at < DATE_ADD(?, INTERVAL 1 DAY)
+      AND p.status = \'successful\'
+      AND p.created_at >= ? AND p.created_at < ?
     GROUP BY DATE(p.created_at)
     ORDER BY pay_day ASC
 ');
-$dailyStmt->execute(array_merge($paymentParams, [$from, $to]));
+$dailyStmt->execute(array_merge($paymentParams, [$from, $toExclusive]));
 $dailyPayments = $dailyStmt->fetchAll();
 
 $dailyLabels = [];

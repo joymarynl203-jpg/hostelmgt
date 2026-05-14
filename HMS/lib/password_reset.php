@@ -52,10 +52,11 @@ function hms_password_reset_issue_token(int $userId): ?string
     $hash = hash('sha256', $raw, false);
 
     try {
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + 3600);
         $db->prepare('
             INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-            VALUES (?, ?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 HOUR))
-        ')->execute([$userId, $hash]);
+            VALUES (?, ?, ?)
+        ')->execute([$userId, $hash, $expiresAt]);
     } catch (PDOException $e) {
         error_log('HMS password_reset token insert failed: ' . $e->getMessage());
 
@@ -74,12 +75,13 @@ function hms_password_reset_lookup_user_id(string $rawToken): ?int
     }
 
     $hash = hash('sha256', $rawToken, false);
+    $nowUtc = gmdate('Y-m-d H:i:s');
     $stmt = hms_db()->prepare('
         SELECT user_id FROM password_reset_tokens
-        WHERE token_hash = ? AND expires_at > UTC_TIMESTAMP()
+        WHERE token_hash = ? AND expires_at > ?
         LIMIT 1
     ');
-    $stmt->execute([$hash]);
+    $stmt->execute([$hash, $nowUtc]);
     $row = $stmt->fetch();
 
     return $row ? (int) $row['user_id'] : null;

@@ -18,7 +18,7 @@ $bookings = $db->prepare('
     SELECT b.*,
         r.room_number,
         h.name AS hostel_name,
-        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = "successful") AS paid_amount
+        (SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.booking_id = b.id AND p.status = \'successful\') AS paid_amount
     FROM bookings b
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
@@ -39,7 +39,7 @@ $paymentsStmt = $db->prepare('
     LEFT JOIN bookings b ON b.id = p.booking_id
     LEFT JOIN rooms r ON r.id = COALESCE(b.room_id, p.room_id)
     LEFT JOIN hostels h ON h.id = r.hostel_id
-    WHERE p.status = "successful"
+    WHERE p.status = \'successful\'
       AND (
         (p.booking_id IS NOT NULL AND EXISTS (
             SELECT 1 FROM bookings b2 WHERE b2.id = p.booking_id AND b2.student_id = ?

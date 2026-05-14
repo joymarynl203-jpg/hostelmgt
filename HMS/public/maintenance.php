@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $insert = $db->prepare('
                         INSERT INTO maintenance_requests (booking_id, student_id, room_id, title, description, status, priority)
-                        VALUES (?, ?, ?, ?, ?, "open", ?)
+                        VALUES (?, ?, ?, ?, ?, \'open\', ?)
                     ');
                     $insert->execute([$bookingId, $userId, (int)$booking['room_id'], $title, $description, $priority]);
                     $maintenanceId = (int)$db->lastInsertId();
@@ -68,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $adminStmt = $db->prepare('
                             SELECT al.actor_user_id AS id
                             FROM audit_logs al
-                            WHERE al.entity_type = "hostel"
-                              AND al.action = "hostel_created"
+                            WHERE al.entity_type = \'hostel\'
+                              AND al.action = \'hostel_created\'
                               AND al.entity_id = (
                                   SELECT hostel_id FROM rooms WHERE id = ?
                               )
@@ -116,7 +116,7 @@ $activeBookings = $db->prepare('
     JOIN rooms r ON r.id = b.room_id
     JOIN hostels h ON h.id = r.hostel_id
     WHERE b.student_id = ?
-      AND b.status IN ("approved","checked_in")
+      AND b.status IN (\'approved\',\'checked_in\')
     ORDER BY b.requested_at DESC
 ');
 $activeBookings->execute([$userId]);

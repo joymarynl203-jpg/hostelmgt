@@ -36,7 +36,7 @@ function hms_pesapal_submit_for_payment(PDO $db, int $userId, array $user, array
 
     $paymentStmt = $db->prepare('
         INSERT INTO payments (booking_id, student_user_id, room_id, amount, method, provider, gateway, status, created_at)
-        VALUES (?, ?, ?, ?, "mobile_money", "other", "pesapal", "pending", NOW())
+        VALUES (?, ?, ?, ?, \'mobile_money\', \'other\', \'pesapal\', \'pending\', NOW())
     ');
     $paymentStmt->execute([$bookingId, $studentUserId, $roomId, $amountToPay]);
     $paymentId = (int)$db->lastInsertId();
@@ -198,7 +198,7 @@ if (!$booking) {
     redirect_to($studentPaymentReturnUrl);
 }
 
-$paidStmt = $db->prepare('SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM payments WHERE booking_id = ? AND status = "successful"');
+$paidStmt = $db->prepare('SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM payments WHERE booking_id = ? AND status = \'successful\'');
 $paidStmt->execute([$bookingId]);
 $paid = (float)($paidStmt->fetch()['paid_amount'] ?? 0);
 $due = (float)($booking['total_due'] ?? 0);

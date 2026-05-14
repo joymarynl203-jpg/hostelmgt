@@ -76,7 +76,7 @@ $sql = '
     JOIN users u ON u.id = mr.student_id
     LEFT JOIN rooms r ON r.id = mr.room_id
     LEFT JOIN hostels h ON h.id = r.hostel_id
-    WHERE mr.status IN ("open","in_progress","resolved","closed")
+    WHERE mr.status IN (\'open\',\'in_progress\',\'resolved\',\'closed\')
 ';
 if ($role === 'warden') {
     $sql .= ' AND h.managed_by = ? ';

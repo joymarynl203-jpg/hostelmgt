@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new RuntimeException('Unable to create warden. Check email uniqueness, NIN format (8–28 alphanumeric/hyphen), and password length.');
                     }
 
-                    $wardenStmt = $db->prepare('SELECT id FROM users WHERE email = ? AND role = "warden" ORDER BY id DESC LIMIT 1');
+                    $wardenStmt = $db->prepare('SELECT id FROM users WHERE email = ? AND role = \'warden\' ORDER BY id DESC LIMIT 1');
                     $wardenStmt->execute([mb_strtolower($email, 'UTF-8')]);
                     $wardenId = (int)($wardenStmt->fetch()['id'] ?? 0);
                     if ($wardenId <= 0) {
@@ -92,7 +92,7 @@ $wardens = $db->query('
         GROUP_CONCAT(h.name ORDER BY h.name SEPARATOR ", ") AS assigned_hostels
     FROM users u
     LEFT JOIN hostels h ON h.managed_by = u.id
-    WHERE u.role = "warden"
+    WHERE u.role = 'warden'
     GROUP BY u.id, u.name, u.email, u.nin, u.phone, u.created_at
     ORDER BY u.created_at DESC
 ')->fetchAll();

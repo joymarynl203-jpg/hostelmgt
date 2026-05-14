@@ -47,7 +47,7 @@ if ($role === 'student' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $insert = $db->prepare('
                         INSERT INTO maintenance_requests (booking_id, student_id, room_id, title, description, status, priority)
-                        VALUES (?, ?, ?, ?, ?, "open", ?)
+                        VALUES (?, ?, ?, ?, ?, \'open\', ?)
                     ');
                     $insert->execute([$bookingId, $userId, (int)$booking['room_id'], $title, $description, $priority]);
                     $maintenanceId = (int)$db->lastInsertId();
@@ -70,8 +70,8 @@ if ($role === 'student' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                         $adminStmt = $db->prepare('
                             SELECT al.actor_user_id AS id
                             FROM audit_logs al
-                            WHERE al.entity_type = "hostel"
-                              AND al.action = "hostel_created"
+                            WHERE al.entity_type = \'hostel\'
+                              AND al.action = \'hostel_created\'
                               AND al.entity_id = (
                                   SELECT hostel_id FROM rooms WHERE id = ?
                               )
@@ -149,9 +149,9 @@ layout_header('Dashboard');
 
 <?php if ($role === 'student'): ?>
     <?php
-        $pendingCount = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM bookings WHERE student_id = ? AND status = "pending"', [$userId])['c'] ?? 0);
-        $approvedCount = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM bookings WHERE student_id = ? AND status = "approved"', [$userId])['c'] ?? 0);
-        $openMaint = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM maintenance_requests WHERE student_id = ? AND status IN ("open","in_progress")', [$userId])['c'] ?? 0);
+        $pendingCount = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM bookings WHERE student_id = ? AND status = \'pending\'', [$userId])['c'] ?? 0);
+        $approvedCount = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM bookings WHERE student_id = ? AND status = \'approved\'', [$userId])['c'] ?? 0);
+        $openMaint = (int) (fetch_one($db, 'SELECT COUNT(*) AS c FROM maintenance_requests WHERE student_id = ? AND status IN (\'open\',\'in_progress\')', [$userId])['c'] ?? 0);
         $activeBookings = fetch_all(
             $db,
             'SELECT b.id AS booking_id, b.status, r.room_number, h.name AS hostel_name
@@ -159,7 +159,7 @@ layout_header('Dashboard');
              JOIN rooms r ON r.id = b.room_id
              JOIN hostels h ON h.id = r.hostel_id
              WHERE b.student_id = ?
-               AND b.status IN ("approved","checked_in")
+               AND b.status IN (\'approved\',\'checked_in\')
              ORDER BY b.requested_at DESC',
             [$userId]
         );
@@ -183,7 +183,7 @@ layout_header('Dashboard');
                 COALESCE(SUM(p.amount), 0) AS paid,
                 COALESCE(SUM(b.total_due), 0) AS due
              FROM bookings b
-             LEFT JOIN payments p ON p.booking_id = b.id AND p.status = "successful"
+             LEFT JOIN payments p ON p.booking_id = b.id AND p.status = \'successful\'
              WHERE b.student_id = ?',
             [$userId]
         );
@@ -239,7 +239,7 @@ layout_header('Dashboard');
                  FROM bookings b
                  JOIN rooms r ON r.id = b.room_id
                  JOIN hostels h ON h.id = r.hostel_id
-                 WHERE b.status = "pending"
+                 WHERE b.status = \'pending\'
                    AND h.managed_by = ?',
                 [$userId]
             )['c'] ?? 0);
@@ -250,12 +250,12 @@ layout_header('Dashboard');
                  FROM bookings b
                  JOIN rooms r ON r.id = b.room_id
                  JOIN hostels h ON h.id = r.hostel_id
-                 WHERE b.status = "pending"
+                 WHERE b.status = \'pending\'
                    AND EXISTS (
                        SELECT 1
                        FROM audit_logs al
-                       WHERE al.entity_type = "hostel"
-                         AND al.action = "hostel_created"
+                       WHERE al.entity_type = \'hostel\'
+                         AND al.action = \'hostel_created\'
                          AND al.entity_id = h.id
                          AND al.actor_user_id = ?
                    )',
@@ -287,7 +287,7 @@ layout_header('Dashboard');
                     <div class="text-muted">Recent audit entries</div>
                     <div class="fw-bold">
                         <?php
-                            $recentAudit = fetch_one($db, 'SELECT COUNT(*) AS c FROM audit_logs WHERE actor_user_id = ? AND created_at >= (NOW() - INTERVAL 7 DAY)', [$userId]);
+                            $recentAudit = fetch_one($db, 'SELECT COUNT(*) AS c FROM audit_logs WHERE actor_user_id = ? AND created_at >= ' . hms_sql_days_ago($db, 7), [$userId]);
                             echo e((string)($recentAudit['c'] ?? 0));
                         ?>
                     </div>
