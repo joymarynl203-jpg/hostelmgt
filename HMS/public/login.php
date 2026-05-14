@@ -21,8 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($GLOBALS['hms_auth_login_student_inactive'])) {
         flash_set('error', 'This student account has been deactivated. Contact your university administrator.');
-    } elseif (!empty($GLOBALS['hms_auth_login_super_admin_portal'])) {
-        flash_set('error', 'Super admin accounts use the separate Super Admin portal, not this login page.');
     } else {
         flash_set('error', 'Invalid email or password.');
     }

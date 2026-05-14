@@ -146,11 +146,11 @@ CREATE TABLE IF NOT EXISTS hms_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_hms_sessions_expire ON hms_sessions (expire);
 
--- Seed super admin rows (same bcrypt hashes as MySQL schema; rotate passwords after first login in production)
+-- Seed super admin rows (initial password SuperAdmin2026! — change after first login in production)
 INSERT INTO users (name, email, password_hash, role, is_active)
 VALUES
-    ('Super Admin 1', 'shamirah0mar915@gmail.com', '$2y$10$ZDVqhQpI03/CGwQnu5Ut4.Es1n6Xa/zVzvn/EUPV.5OcAegU4QGnW', 'super_admin', 1),
-    ('Super Admin 2', 'joymarynl203@gmail.com', '$2y$10$ZDVqhQpI03/CGwQnu5Ut4.Es1n6Xa/zVzvn/EUPV.5OcAegU4QGnW', 'super_admin', 1)
+    ('Super Admin 1', 'shamirah0mar915@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1),
+    ('Super Admin 2', 'joymarynl203@gmail.com', '$2a$10$EArC7PALCcqHW3MFc4XSKuJa0EbOrfKevhGsG7W1GiDLPI1T3p6h2', 'super_admin', 1)
 ON CONFLICT (email) DO UPDATE SET
     name = EXCLUDED.name,
     password_hash = EXCLUDED.password_hash,

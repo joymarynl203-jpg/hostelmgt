@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../lib/helpers.php';
 require_once __DIR__ . '/../../db.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -56,6 +56,9 @@ $orderBySql = match ($sortBy) {
 if ($role === 'warden') {
     $scopeSql = 'h.managed_by = ?';
     $scopeParams = [$userId];
+} elseif ($role === 'super_admin') {
+    $scopeSql = '1=1';
+    $scopeParams = [];
 } else {
     $scopeSql = $adminHostelScope;
     $scopeParams = [$userId];
@@ -203,6 +206,8 @@ if ($role === 'warden') {
     $hostelFilter = $db->prepare('SELECT id, name FROM hostels WHERE managed_by = ? ORDER BY name ASC');
     $hostelFilter->execute([$userId]);
     $hostelFilter = $hostelFilter->fetchAll();
+} elseif ($role === 'super_admin') {
+    $hostelFilter = $db->query('SELECT id, name FROM hostels ORDER BY name ASC')->fetchAll();
 } else {
     $hostelFilter = $db->prepare('
         SELECT h.id, h.name

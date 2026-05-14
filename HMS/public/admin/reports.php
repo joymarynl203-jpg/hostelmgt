@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../db.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -41,9 +41,11 @@ $occWhere[] = 'h.id = h.id'; // no-op to simplify building
 if ($role === 'warden') {
     $occWhere[] = 'h.managed_by = ?';
     $occParams[] = $userId;
-} elseif ($role === 'university_admin') {
-    $occWhere[] = $adminHostelScope;
-    $occParams[] = $userId;
+} elseif (hms_role_has_university_admin_privileges($role)) {
+    if (!hms_role_is_super_admin($role)) {
+        $occWhere[] = $adminHostelScope;
+        $occParams[] = $userId;
+    }
 }
 if ($hostelId > 0) {
     $occWhere[] = 'h.id = ?';
@@ -72,6 +74,13 @@ $occupancy = $occStmt->fetchAll();
 if ($role === 'warden') {
     $bookingWhere = 'h.managed_by = ?';
     $bookingParams = [$userId];
+    if ($hostelId > 0) {
+        $bookingWhere .= ' AND h.id = ?';
+        $bookingParams[] = $hostelId;
+    }
+} elseif ($role === 'super_admin') {
+    $bookingWhere = '1=1';
+    $bookingParams = [];
     if ($hostelId > 0) {
         $bookingWhere .= ' AND h.id = ?';
         $bookingParams[] = $hostelId;
@@ -106,6 +115,8 @@ $paymentWhere = '';
 if ($role === 'warden') {
     $paymentWhere = 'h.managed_by = ?';
     $paymentParams[] = $userId;
+} elseif ($role === 'super_admin') {
+    $paymentWhere = '1=1';
 } else {
     $paymentWhere = $adminHostelScope;
     $paymentParams[] = $userId;
@@ -191,6 +202,8 @@ if ($role === 'warden') {
     $hostelFilter = $db->prepare('SELECT id, name FROM hostels WHERE managed_by = ? ORDER BY name ASC');
     $hostelFilter->execute([$userId]);
     $hostelFilter = $hostelFilter->fetchAll();
+} elseif ($role === 'super_admin') {
+    $hostelFilter = $db->query('SELECT id, name FROM hostels ORDER BY name ASC')->fetchAll();
 } else {
     $hostelFilter = $db->prepare('
         SELECT h.id, h.name
@@ -208,6 +221,8 @@ $outBookParams = [];
 if ($role === 'warden') {
     $outBookWhere[] = 'h.managed_by = ?';
     $outBookParams[] = $userId;
+} elseif ($role === 'super_admin') {
+    $outBookWhere[] = '1=1';
 } else {
     $outBookWhere[] = $adminHostelScope;
     $outBookParams[] = $userId;

@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../db.php';
 require_once __DIR__ . '/../../lib/maps.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
 
     if ($action === 'create_hostel') {
-        if ($role !== 'university_admin') {
+        if (!hms_role_has_university_admin_privileges($role)) {
             http_response_code(403);
             flash_set('error', 'Only university admins can create hostels.');
             redirect_to(hms_url('admin/hostels.php'));
@@ -101,15 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'assign_manager' && $role === 'university_admin') {
+    if ($action === 'assign_manager' && hms_role_has_university_admin_privileges($role)) {
         $hostelId = (int)($_POST['hostel_id'] ?? 0);
         $managedBy = (int)($_POST['managed_by'] ?? 0);
         if ($hostelId <= 0) {
             flash_set('error', 'Invalid hostel.');
         } else {
-            $scopeChk = $db->prepare('SELECT h.id FROM hostels h WHERE h.id = ? AND ' . $adminHostelScope . ' LIMIT 1');
-            $scopeChk->execute([$hostelId, $userId]);
-            if (!$scopeChk->fetch()) {
+            if (!hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelId)) {
                 flash_set('error', 'You cannot assign a manager for that hostel.');
             } else {
                 $managedBy = $managedBy > 0 ? $managedBy : null;
@@ -121,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($action === 'update_rent_period' && $role === 'university_admin') {
+    if ($action === 'update_rent_period' && hms_role_has_university_admin_privileges($role)) {
         $hostelId = (int)($_POST['hostel_id'] ?? 0);
         $rs = trim((string)($_POST['rent_period_start'] ?? ''));
         $re = trim((string)($_POST['rent_period_end'] ?? ''));
@@ -130,9 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($rs > $re) {
             flash_set('error', 'Semester start must be on or before semester end.');
         } else {
-            $scopeChk = $db->prepare('SELECT h.id FROM hostels h WHERE h.id = ? AND ' . $adminHostelScope . ' LIMIT 1');
-            $scopeChk->execute([$hostelId, $userId]);
-            if (!$scopeChk->fetch()) {
+            if (!hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelId)) {
                 flash_set('error', 'You cannot edit rental dates for that hostel.');
             } else {
                 $db->prepare('UPDATE hostels SET rent_period_start = ?, rent_period_end = ? WHERE id = ?')->execute([$rs, $re, $hostelId]);
@@ -152,10 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect_to(hms_url('admin/hostels.php'));
         }
         $allowed = false;
-        if ($role === 'university_admin') {
-            $scopeChk = $db->prepare('SELECT h.id FROM hostels h WHERE h.id = ? AND ' . $adminHostelScope . ' LIMIT 1');
-            $scopeChk->execute([$hostelId, $userId]);
-            $allowed = (bool)$scopeChk->fetch();
+        if (hms_role_has_university_admin_privileges($role)) {
+            $allowed = hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelId);
         } elseif ($role === 'warden') {
             $wchk = $db->prepare('SELECT id FROM hostels WHERE id = ? AND managed_by = ?');
             $wchk->execute([$hostelId, $userId]);
@@ -182,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect_to(hms_url('admin/hostels.php'));
     }
 
-    if ($action === 'update_nearby_institutions' && $role === 'university_admin') {
+    if ($action === 'update_nearby_institutions' && hms_role_has_university_admin_privileges($role)) {
         if (!$hasNearbyInstitutions) {
             flash_set('error', 'Nearby institutions feature is pending database migration. Run migration 009 first.');
             redirect_to(hms_url('admin/hostels.php'));
@@ -192,9 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($hostelId <= 0) {
             flash_set('error', 'Invalid hostel.');
         } else {
-            $scopeChk = $db->prepare('SELECT h.id FROM hostels h WHERE h.id = ? AND ' . $adminHostelScope . ' LIMIT 1');
-            $scopeChk->execute([$hostelId, $userId]);
-            if (!$scopeChk->fetch()) {
+            if (!hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelId)) {
                 flash_set('error', 'You cannot update nearby institutions for that hostel.');
             } else {
                 $db->prepare('UPDATE hostels SET nearby_institutions = ? WHERE id = ?')
@@ -221,6 +213,14 @@ if ($role === 'warden') {
     ');
     $hostels->execute([$userId]);
     $hostels = $hostels->fetchAll();
+} elseif ($role === 'super_admin') {
+    $hostels = $db->query('
+        SELECT h.*,
+            (SELECT COUNT(*) FROM rooms r WHERE r.hostel_id = h.id) AS room_count,
+            (SELECT COALESCE(SUM(r.current_occupancy),0) FROM rooms r WHERE r.hostel_id = h.id) AS occupancy
+        FROM hostels h
+        ORDER BY h.is_active DESC, h.name ASC
+    ')->fetchAll();
 } else {
     $hostels = $db->prepare('
         SELECT h.*,
@@ -281,7 +281,7 @@ layout_header('Manage Hostels');
                                 $rpS = (string)($h['rent_period_start'] ?? '');
                                 $rpE = (string)($h['rent_period_end'] ?? '');
                                 $collapseId = 'hostel-detail-' . $hid;
-                                $canEditHostelMap = ($role === 'university_admin') || ($role === 'warden' && (int)($h['managed_by'] ?? 0) === $userId);
+                                $canEditHostelMap = (hms_role_has_university_admin_privileges($role)) || ($role === 'warden' && (int)($h['managed_by'] ?? 0) === $userId);
                                 $hasMapPin = hms_hostel_has_map_pin($h);
                                 $mapLatVal = (string)($h['map_latitude'] ?? '');
                                 $mapLngVal = (string)($h['map_longitude'] ?? '');
@@ -327,7 +327,7 @@ layout_header('Manage Hostels');
                                                 <div class="col-lg-6">
                                                     <?php
                                                         $wardenMayToggle = ($role === 'warden' && $isActive === 0);
-                                                        $adminMayToggle = ($role === 'university_admin');
+                                                        $adminMayToggle = (hms_role_has_university_admin_privileges($role));
                                                         $showHostelActiveToggle = $wardenMayToggle || $adminMayToggle;
                                                     ?>
                                                     <?php if ($showHostelActiveToggle): ?>
@@ -346,7 +346,7 @@ layout_header('Manage Hostels');
                                                     <?php endif; ?>
                                                 </div>
 
-                                                <?php if ($role === 'university_admin'): ?>
+                                                <?php if (hms_role_has_university_admin_privileges($role)): ?>
                                                     <div class="col-12">
                                                         <hr class="my-0 opacity-25">
                                                     </div>
@@ -461,7 +461,7 @@ layout_header('Manage Hostels');
     </div>
 </div>
 
-<?php if ($role === 'university_admin'): ?>
+<?php if (hms_role_has_university_admin_privileges($role)): ?>
 <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-4">
         <h2 class="h4 mb-3">Create hostel</h2>

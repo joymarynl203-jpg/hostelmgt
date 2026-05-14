@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../db.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -48,10 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo 'Forbidden';
                     exit;
                 }
-            } elseif ($role === 'university_admin') {
-                $scopeChk = $db->prepare('SELECT h.id FROM hostels h WHERE h.id = ? AND ' . $adminHostelScope . ' LIMIT 1');
-                $scopeChk->execute([$hostelId, $userId]);
-                if (!$scopeChk->fetch()) {
+            } elseif (hms_role_has_university_admin_privileges($role)) {
+                if (!hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelId)) {
                     flash_set('error', 'You cannot add rooms to that hostel.');
                     redirect_to(hms_url('admin/rooms.php'));
                 }
@@ -93,16 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo 'Forbidden';
                     exit;
                 }
-            } elseif ($role === 'university_admin') {
-                $scopeChk = $db->prepare('
-                    SELECT r.id
-                    FROM rooms r
-                    JOIN hostels h ON h.id = r.hostel_id
-                    WHERE r.id = ? AND ' . $adminHostelScope . '
-                    LIMIT 1
-                ');
-                $scopeChk->execute([$roomId, $userId]);
-                if (!$scopeChk->fetch()) {
+            } elseif (hms_role_has_university_admin_privileges($role)) {
+                $hidStmt = $db->prepare('SELECT hostel_id FROM rooms WHERE id = ?');
+                $hidStmt->execute([$roomId]);
+                $hostelForRoom = (int) ($hidStmt->fetch()['hostel_id'] ?? 0);
+                if (!hms_admin_is_hostel_in_university_scope($db, $role, $userId, $adminHostelScope, $hostelForRoom)) {
                     flash_set('error', 'You cannot update that room.');
                     redirect_to(hms_url('admin/rooms.php'));
                 }
@@ -125,6 +118,8 @@ if ($role === 'warden') {
     $hostelsStmt = $db->prepare('SELECT id, name FROM hostels WHERE managed_by = ? ORDER BY name ASC');
     $hostelsStmt->execute([$userId]);
     $hostels = $hostelsStmt->fetchAll();
+} elseif ($role === 'super_admin') {
+    $hostels = $db->query('SELECT id, name FROM hostels ORDER BY name ASC')->fetchAll();
 } else {
     $hostelsStmt = $db->prepare('SELECT h.id, h.name FROM hostels h WHERE ' . $adminHostelScope . ' ORDER BY h.name ASC');
     $hostelsStmt->execute([$userId]);
@@ -144,7 +139,7 @@ if ($role === 'warden' && $selectedHostelId <= 0 && !empty($hostels)) {
     $selectedHostelId = (int)$hostels[0]['id'];
 }
 
-if ($role === 'university_admin' && $showAddRoom && $selectedHostelId <= 0) {
+if (hms_role_has_university_admin_privileges($role) && $showAddRoom && $selectedHostelId <= 0) {
     $showAddRoom = false;
 }
 
@@ -176,7 +171,7 @@ layout_header('Manage Rooms');
 <div class="d-flex align-items-start justify-content-between mb-3">
     <div>
         <h2 class="h4 mb-1">Rooms</h2>
-        <div class="text-muted small"><?php echo $role === 'university_admin' ? 'Choose a hostel, then create or edit rooms for that hostel.' : 'Create rooms and manage their capacity and fees.'; ?></div>
+        <div class="text-muted small"><?php echo hms_role_has_university_admin_privileges($role) ? 'Choose a hostel, then create or edit rooms for that hostel.' : 'Create rooms and manage their capacity and fees.'; ?></div>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-primary" href="<?php echo hms_url('admin/hostels.php'); ?>">Back to Hostels</a>
@@ -187,7 +182,7 @@ layout_header('Manage Rooms');
 </div>
 
 <div class="row g-4">
-    <?php if ($role === 'university_admin'): ?>
+    <?php if (hms_role_has_university_admin_privileges($role)): ?>
     <div class="col-12">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
@@ -210,7 +205,7 @@ layout_header('Manage Rooms');
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
                 <h2 class="h4 mb-3">Existing Rooms<?php echo ($selectedHostelId > 0 && $selectedHostelName !== '') ? ' — ' . e($selectedHostelName) : ''; ?></h2>
-                <?php if ($role === 'university_admin' && $selectedHostelId <= 0): ?>
+                <?php if (hms_role_has_university_admin_privileges($role) && $selectedHostelId <= 0): ?>
                     <div class="alert alert-secondary mb-0">Select a hostel above to view and manage its rooms.</div>
                 <?php elseif (empty($rooms)): ?>
                     <div class="alert alert-info">No rooms found. Add one using the form.</div>

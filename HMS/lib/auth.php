@@ -41,10 +41,45 @@ function require_role(array $roles): void
     }
 }
 
+/** Super admins share university-admin privileges for hostels, rooms, and user management. */
+function hms_role_has_university_admin_privileges(string $role): bool
+{
+    return $role === 'university_admin' || $role === 'super_admin';
+}
+
+/** Operational staff: wardens, university admins, and super admins. */
+function hms_role_has_operational_privileges(string $role): bool
+{
+    return in_array($role, ['warden', 'university_admin', 'super_admin'], true);
+}
+
+/** Super admins are not limited to the “hostels you created” audit scope. */
+function hms_role_is_super_admin(string $role): bool
+{
+    return $role === 'super_admin';
+}
+
+/** True if this user may act on the given hostel (uni admin: audit scope; super admin: any). */
+function hms_admin_is_hostel_in_university_scope(PDO $db, string $role, int $userId, string $adminHostelScopeSql, int $hostelId): bool
+{
+    if ($hostelId <= 0) {
+        return false;
+    }
+    if (hms_role_is_super_admin($role)) {
+        $q = $db->prepare('SELECT 1 FROM hostels WHERE id = ? LIMIT 1');
+        $q->execute([$hostelId]);
+
+        return (bool) $q->fetch();
+    }
+    $q = $db->prepare('SELECT 1 FROM hostels h WHERE h.id = ? AND ' . $adminHostelScopeSql . ' LIMIT 1');
+    $q->execute([$hostelId, $userId]);
+
+    return (bool) $q->fetch();
+}
+
 function auth_login(string $email, string $password): bool
 {
     $GLOBALS['hms_auth_login_student_inactive'] = false;
-    $GLOBALS['hms_auth_login_super_admin_portal'] = false;
     $email = mb_strtolower(trim($email), 'UTF-8');
     $stmt = hms_db()->prepare('SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ? LIMIT 1');
     $stmt->execute([$email]);
@@ -54,11 +89,6 @@ function auth_login(string $email, string $password): bool
     }
 
     if (!password_verify($password, $user['password_hash'])) {
-        return false;
-    }
-
-    if (($user['role'] ?? '') === 'super_admin') {
-        $GLOBALS['hms_auth_login_super_admin_portal'] = true;
         return false;
     }
 

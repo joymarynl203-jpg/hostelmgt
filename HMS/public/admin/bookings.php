@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../db.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -53,19 +53,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo 'Forbidden';
             exit;
         }
-    } elseif ($role === 'university_admin') {
-        $adminChk = $db->prepare('
-            SELECT h.id
-            FROM hostels h
-            WHERE h.id = ?
-              AND ' . $adminHostelScope . '
-            LIMIT 1
-        ');
-        $adminChk->execute([(int)($booking['hostel_id'] ?? 0), $userId]);
-        if (!$adminChk->fetch()) {
-            http_response_code(403);
-            echo 'Forbidden';
-            exit;
+    } elseif (hms_role_has_university_admin_privileges($role)) {
+        if (!hms_role_is_super_admin($role)) {
+            $adminChk = $db->prepare('
+                SELECT h.id
+                FROM hostels h
+                WHERE h.id = ?
+                  AND ' . $adminHostelScope . '
+                LIMIT 1
+            ');
+            $adminChk->execute([(int)($booking['hostel_id'] ?? 0), $userId]);
+            if (!$adminChk->fetch()) {
+                http_response_code(403);
+                echo 'Forbidden';
+                exit;
+            }
         }
     }
 
@@ -280,7 +282,7 @@ layout_header('Booking Approvals');
 <div class="d-flex align-items-start justify-content-between mb-3">
     <div>
         <h2 class="h4 mb-1">Booking Approvals & Room Allocation</h2>
-        <div class="text-muted small">Approve pending requests, check in when the student takes the bed<?php echo $role === 'university_admin' ? ', and record departure only when they have actually left' : '; a university administrator records departure when the student has left'; ?>. Residents stay allocated (and the room stays unavailable to others) after the booking semester dates until check-out—nothing is cleared automatically when a semester ends.</div>
+        <div class="text-muted small">Approve pending requests, check in when the student takes the bed<?php echo hms_role_has_university_admin_privileges($role) ? ', and record departure only when they have actually left' : '; a university administrator records departure when the student has left'; ?>. Residents stay allocated (and the room stays unavailable to others) after the booking semester dates until check-out—nothing is cleared automatically when a semester ends.</div>
     </div>
     <a class="btn btn-outline-primary btn-sm" href="<?php echo hms_url('admin/reports.php'); ?>">Reports</a>
 </div>
@@ -350,7 +352,7 @@ layout_header('Booking Approvals');
                                 <button class="btn btn-sm btn-success" type="submit">Check-in</button>
                             </form>
                         <?php elseif ($b['status'] === 'checked_in'): ?>
-                            <?php if ($role === 'university_admin'): ?>
+                            <?php if (hms_role_has_university_admin_privileges($role)): ?>
                             <form method="post" action=""<?php echo hms_data_confirm('Record that this student has left and release the bed? Occupancy will decrease and the room can be booked again.'); ?>>
                                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                                 <input type="hidden" name="action" value="check_out">

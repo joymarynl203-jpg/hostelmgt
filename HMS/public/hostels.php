@@ -71,7 +71,7 @@ if ($user['role'] === 'warden') {
     $hostels = $db->prepare($sql);
     $hostels->execute($params);
     $hostels = $hostels->fetchAll();
-} elseif ($user['role'] === 'university_admin') {
+} elseif (hms_role_has_university_admin_privileges($user['role'])) {
     $sql = '
         SELECT h.*,
             (SELECT COUNT(*) FROM rooms r WHERE r.hostel_id = h.id) AS room_count,

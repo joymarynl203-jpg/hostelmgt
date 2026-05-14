@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../lib/csrf.php';
 require_once __DIR__ . '/../../db.php';
 
 require_login();
-require_role(['warden', 'university_admin']);
+require_role(['warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
@@ -25,6 +25,8 @@ $adminHostelScope = 'EXISTS (
 if ($role === 'warden') {
     $hostelsStmt = $db->prepare('SELECT id, name FROM hostels WHERE managed_by = ? ORDER BY name ASC');
     $hostelsStmt->execute([$userId]);
+} elseif ($role === 'super_admin') {
+    $hostelsStmt = $db->query('SELECT id, name FROM hostels ORDER BY name ASC');
 } else {
     $hostelsStmt = $db->prepare('
         SELECT h.id, h.name
@@ -41,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify($_POST['csrf_token'] ?? '');
     $action = (string)($_POST['action'] ?? '');
     if ($action === 'toggle_student_active') {
-        if ($role !== 'university_admin') {
+        if (!hms_role_has_university_admin_privileges($role)) {
             flash_set('error', 'Only university administrators can activate or deactivate student accounts.');
             $rh = (int)($_POST['redirect_hostel_id'] ?? 0);
             $rv = (string)($_POST['redirect_view'] ?? 'current');
@@ -62,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($studentId <= 0 || $studentId === $userId) {
             flash_set('error', 'Invalid student.');
         } else {
+            $bookingScopeSql = hms_role_is_super_admin($role) ? '1=1' : $adminHostelScope;
             $chk = $db->prepare('
                 SELECT u.id
                 FROM users u
@@ -73,11 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     JOIN rooms r2 ON r2.id = b2.room_id
                     JOIN hostels h ON h.id = r2.hostel_id
                     WHERE b2.student_id = u.id
-                      AND ' . $adminHostelScope . '
+                      AND ' . $bookingScopeSql . '
                   )
                 LIMIT 1
             ');
-            $chk->execute([$studentId, $userId]);
+            $chkParams = hms_role_is_super_admin($role) ? [$studentId] : [$studentId, $userId];
+            $chk->execute($chkParams);
             if (!$chk->fetch()) {
                 flash_set('error', 'You can only change accounts for students linked to your hostels.');
             } else {
@@ -122,9 +126,9 @@ $depositMetClause = '(
 
 $scopeSql = $role === 'warden'
     ? 'h.managed_by = ?'
-    : $adminHostelScope;
+    : (hms_role_is_super_admin($role) ? '1=1' : $adminHostelScope);
 
-$params = [$userId];
+$params = hms_role_is_super_admin($role) ? [] : [$userId];
 $hostelFilterSql = '';
 if ($hostelId > 0) {
     $hostelFilterSql = ' AND h.id = ? ';
@@ -178,7 +182,7 @@ layout_header('Students by room');
         <h2 class="h4 mb-1">Students by room</h2>
         <p class="text-muted small mb-0">
             Students with bookings where at least <strong>20% of the booking fee</strong> has been paid (same rule as approvals).
-            <?php echo $role === 'university_admin' ? ' <strong>Account</strong> deactivate/reactivate is for university administrators only; wardens see status but cannot change it.' : ''; ?>
+            <?php echo hms_role_has_university_admin_privileges($role) ? ' <strong>Account</strong> deactivate/reactivate is for university administrators only; wardens see status but cannot change it.' : ''; ?>
             <?php echo $view === 'all' ? ' Including completed stays.' : ' Showing active pipeline (pending, approved, checked in). Checked-in residents remain listed after their booking end date until staff record departure (check-out); the bed is not freed automatically when the semester ends.'; ?>
         </p>
     </div>
@@ -234,7 +238,7 @@ layout_header('Students by room');
                             <th>Booking</th>
                             <th>Stay</th>
                             <th class="text-end">Due / Paid</th>
-                            <th class="text-end" style="min-width: <?php echo $role === 'university_admin' ? '140' : '90'; ?>px;">Account</th>
+                            <th class="text-end" style="min-width: <?php echo hms_role_has_university_admin_privileges($role) ? '140' : '90'; ?>px;">Account</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -285,7 +289,7 @@ layout_header('Students by room');
                                 ?>
                                 <td class="text-end small">
                                     <span class="badge <?php echo $sActive ? 'bg-success' : 'bg-secondary'; ?>"><?php echo $sActive ? 'Active' : 'Deactivated'; ?></span>
-                                    <?php if ($role === 'university_admin'): ?>
+                                    <?php if (hms_role_has_university_admin_privileges($role)): ?>
                                     <form method="post" action="" class="d-inline-block mt-1"<?php echo hms_data_confirm($sActive ? 'Deactivate this student account? They will be signed out and unable to log in until reactivated.' : 'Reactivate this student account? They will be able to log in again.'); ?>>
                                         <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>">
                                         <input type="hidden" name="action" value="toggle_student_active">

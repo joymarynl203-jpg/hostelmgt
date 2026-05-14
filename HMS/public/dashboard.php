@@ -243,6 +243,12 @@ layout_header('Dashboard');
                    AND h.managed_by = ?',
                 [$userId]
             )['c'] ?? 0);
+        } elseif ($role === 'super_admin') {
+            $pendingCount = (int) (fetch_one(
+                $db,
+                'SELECT COUNT(*) AS c FROM bookings WHERE status = \'pending\'',
+                []
+            )['c'] ?? 0);
         } else {
             $pendingCount = (int) (fetch_one(
                 $db,
@@ -297,7 +303,7 @@ layout_header('Dashboard');
         </div>
     </div>
 
-    <?php if ($role === 'university_admin'): ?>
+    <?php if (hms_role_has_university_admin_privileges($role)): ?>
     <div class="col-12">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">

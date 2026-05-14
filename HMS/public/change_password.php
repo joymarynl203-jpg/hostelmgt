@@ -5,7 +5,7 @@ require_once __DIR__ . '/../lib/helpers.php';
 require_once __DIR__ . '/../lib/csrf.php';
 
 require_login();
-require_role(['student', 'warden', 'university_admin']);
+require_role(['student', 'warden', 'university_admin', 'super_admin']);
 
 $db = hms_db();
 $user = hms_current_user();
