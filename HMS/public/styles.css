@@ -351,3 +351,9 @@ body.hms-page-login-bg {
     }
 }
 
+/* Show / hide password (input-group from app.js) */
+.hms-password-field .btn {
+    min-width: 4.25rem;
+    flex-shrink: 0;
+}
+
